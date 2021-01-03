@@ -1,0 +1,19 @@
+<scxml datamodel="web-prolog" initial="run">
+   <datamodel>
+        int(25).
+        int(10).
+        int(15).
+        int(30).
+    </datamodel>
+   <state id="run">
+      <go if="int(X), int(Y), X > Y">
+            Z is X-Y,
+            retract(int(X)),
+            assert(int(Z))
+      </go>
+      <go to="stop" if="int(X)">
+            writeln(X)
+      </go>
+   </state>
+   <final id="stop" />
+</scxml>

@@ -1,0 +1,21 @@
+<scxml initial="start">
+   <parallel id="start">
+      <state id="pinger">
+         <onentry>
+		     raise(ping)
+         </onentry>
+         <go on="ping">
+             writeln('Ping'),
+             sleep(1),
+			 raise(pong)
+         </go>
+      </state>
+      <state id="ponger">
+         <go on="pong">
+             writeln('Pong'),
+             sleep(1),
+             raise(ping)
+         </go>
+      </state>
+   </parallel>
+</scxml>

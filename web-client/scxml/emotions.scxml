@@ -1,0 +1,30 @@
+<scxml initial="agent">
+   <parallel id="agent">
+      <parallel id="emotions">
+         <state id="AF-dimension" initial="anger">
+            <state id="anger">
+               <go to="fear" on="e"/>
+            </state>
+            <state id="fear">
+               <go to="anger" on="d"/>
+            </state>
+         </state>
+         <state id="AS-dimension" initial="anticipation">
+            <state id="anticipation">
+               <go to="surprise" on="e"/>
+            </state>
+            <state id="surprise">
+               <go to="anticipation" on="f"/>
+            </state>
+         </state>
+      </parallel>
+      <state id="behavior" initial="attacking">
+         <state id="attacking">
+            <go to="fleeing" on="e"/>
+         </state>
+         <state id="fleeing">
+            <go to="attacking" on="d"/>
+         </state>
+      </state>
+   </parallel>
+</scxml>

@@ -1,0 +1,18 @@
+<scxml datamodel="web-prolog" initial="start">
+   <parallel id="start">
+      <state id="clock">
+         <onentry>
+             raise(tick)
+         </onentry>
+         <go on="tick">
+             sleep(1),
+             raise(tick)
+         </go>
+      </state>
+      <state id="listener">
+         <go on="tick">
+             writeln('Heard a tick!')
+         </go>
+      </state>
+   </parallel>
+</scxml>

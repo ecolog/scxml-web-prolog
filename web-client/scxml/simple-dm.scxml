@@ -1,0 +1,55 @@
+<scxml datamodel="web-prolog" initial="start">
+    <datamodel>
+        :- dynamic color/1, size/1.
+        
+        np(color(Color)) --> color(Color).
+        np(color(Color)) --> [a], color(Color), [box].
+        np(size(Size)) --> size(Size).
+        np(size(Size)) --> [a], size(Size), [box].
+        
+        color(red) --> [red].
+        color(blue) --> [blue].
+
+        size(small) --> [small].
+        size(big) --> [big].
+        
+    </datamodel>
+    <state id="start" initial="color">
+        <onentry>
+            writeln('Welcome to the box shop!')
+        </onentry>
+        <history id="h">
+            <go to="color" />
+        </history>
+        <state id="color">
+            <onentry> 
+                writeln('What color do you want?')
+            </onentry>
+            <go to="size"
+                on="input(Input)" 
+                if="phrase(np(color(Color)), Input)"> 
+                    assert(color(Color))
+            </go>
+        </state>
+        <state id="size">
+            <onentry> 
+                writeln('What size do you want?')
+            </onentry>
+            <go to="final"
+                on="input(Input)" 
+                if="phrase(np(size(Size)), Input)"> 
+                    assert(size(Size))
+            </go>
+        </state>
+        <go to="h" on="_">
+            writeln('I did not understand.')
+        </go>
+    </state>
+    <final id="final">
+        <onentry>
+            size(Size), color(Color),
+            format('You want a ~p ~p box!\n', [Size, Color])
+        </onentry>        
+    </final>
+</scxml>
+

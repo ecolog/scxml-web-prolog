@@ -1,0 +1,222 @@
+<scxml initial="IBiS1">
+
+   <datamodel>
+   
+     stack(agenda).
+     item(agenda,greet).
+  
+     stack(plan).
+     
+     set(bel).
+   
+     set(com).
+   
+     stack(qud).
+   
+     speaker(null).
+   
+     move(null).
+   
+     plan(findout(how)).
+     plan(findout('from')).
+     plan(findout('to')).
+     plan(findout(month)).  
+     plan(findout('class')). 
+     plan(consultDB(price)). 
+     plan(respond(price)).
+                      
+     db(price,1234).                 
+
+   </datamodel>
+
+   <parallel id="IBiS1">
+
+      <state id="dialogueMoveEngine" initial="select">
+         <state id="select" initial="selectAction">
+            <state id="selectAction">
+               <go if=""is_empty(agenda), top(plan,Action)"
+                           to=""selectMove">
+                  <script>push(agenda,Action)</script>
+               </go>
+               <go to=""selectMove"/>
+            </state>
+            <state id="selectMove">
+               <go if=""top(agenda,respond(Q)),member(bel,Q:R),relevant_answer(Q,R)"
+                           to=""update">
+                  <raise on="generateMove" expr="move(answer(R))"/>
+               </go>
+               <go if=""top(agenda,findout(Q)) ; top(agenda,raise(Q))"
+                           to=""update">
+                  <raise on="generateMove" expr="move(ask(Q))"/>
+               </go>
+               <go if=""top(agenda,M)"
+                           to=""update">
+                  <raise on="generateMove" expr="move(M)"/>
+               </go>
+               <go to=""update"/>
+            </state>
+         </state>
+         <state id="update" initial="init">
+            <state id="init">
+               <go to=""grounding">
+                  <script>clear(agenda)</script>
+               </go>
+            </state>
+            <state id="grounding">
+               <go on="says"
+                           if=""data(act(Speaker,Move))"
+                           to=""integrate">
+                  <assign location="IS.shared.lu.move"
+                          expr="Eventdata.move"/>
+                  <assign location="IS.shared.lu.speaker"
+                          expr="Eventdata.speaker"/>
+               </go>
+            </state>
+            <state id="integrate">
+               <go pcond="IS.shared.lu.move=greet"
+                           to=""downdateQUD">
+               </go>
+               <go pcond="IS.shared.lu.speaker=sys
+                                  IS.shared.lu.move=quit"
+                           to=""quit">
+               </go>
+               <go pcond="IS.shared.lu.speaker=usr
+                                  IS.shared.lu.move=quit"
+                           to=""downdateQUD">
+                  <script>{IS.private.agenda push(quit)}</script>
+               </go>
+               <go vars="Q"
+                           pcond="IS.shared.lu.speaker=sys
+                                  IS.shared.lu.move=ask(Q)"
+                           to=""downdateQUD">
+                  <script>{IS.shared.qud push(Q)}</script>
+               </go>
+               <go vars="Q"
+                           pcond="IS.shared.lu.speaker=usr
+                                  IS.shared.lu.move=ask(Q)"
+                           to=""downdateQUD">
+                  <script>
+                      {IS.shared.qud push(Q)}
+                      {IS.private.agenda push(respond(Q))}
+                  </script>
+               </go>
+               <go vars="Q R"
+                           pcond="IS.shared.lu.move=answer(R)
+                                  {IS.shared.qud top(Q)}
+                                  {Domain.relevantAnswer Q R}"
+                           to=""downdateQUD">
+                  <script>{IS.shared.com add(Q#R)}</script>
+               </go>
+            </state>
+            <state id="downdateQUD">
+               <go vars="Q R"
+                           pcond="{IS.shared.qud top(Q)}
+                                  {Domain.relevantAnswer Q R}
+                                  {IS.shared.com member(Q#R)}"
+                           to=""load_plan">
+                  <script>{IS.shared.qud pop()}</script>
+               </go>
+               <go to=""load_plan"/>
+            </state>
+            <state id="load_plan">
+               <go vars="P"
+                           pcond="{IS.private.agenda top(respond(price))}
+                                  {Domain.relevantAnswer price P}
+                                  {IS.private.bel nonMember(price#P)}"
+                           to=""exec_plan">
+                  <script>{IS.private.agenda pop()}</script>
+                  <assign location="IS.private.plan" expr="Plan"/>
+               </go>
+               <go to=""exec_plan"/>
+            </state>
+            <state id="exec_plan">
+               <go vars="Q"
+                           pcond="{IS.private.plan top(consultDB(Q))}">
+                  <script>
+                     {IS.private.bel add({Domain.consultDB Q})}
+                     {IS.private.plan pop()}
+                  </script>
+               </go>
+               <go vars="Q A"
+                           pcond="{IS.private.plan top(findout(Q))}
+                                  {IS.shared.com member(Q#A)}
+                                  {Domain.relevantAnswer Q A}
+                           []     {IS.private.plan top('raise'(Q))}
+                                  {IS.shared.com member(Q#A)}
+                                  {Domain.relevantAnswer Q A}">
+                  <script>{IS.private.plan pop()}</script>
+               </go>
+               <go if=""IS.shared.lu.speaker==usr"
+                           to=""select"/>
+               <go if=""IS.shared.lu.speaker==sys"
+                           to=""update"/>
+            </state>
+         </state>
+      </state>
+
+      <state id="generate">
+         <go on="generateMove">
+            <send on="says"
+                  expr="o(move:Eventdata.move speaker:sys)"/>
+         </go>
+      </state>
+
+      <state id="driver">
+         <go on="says"
+                     if=""Eventdata.speaker==sys andthen
+                           Eventdata.move==greet">
+            <send on="says"
+                  expr="o(move:greet speaker:usr)"/>
+            <send on="says"
+                  expr="o(move:ask(price) speaker:usr)"/>
+         </go>
+         <go on="says"
+                     if=""Eventdata.speaker==sys andthen
+                           Eventdata.move==ask(how)">
+            <send on="says"
+                  expr="o(move:answer(train) speaker:usr)"/>
+         </go>
+         <go on="says"
+                     if=""Eventdata.speaker==sys andthen
+                           Eventdata.move==ask('from')">
+            <send on="says"
+                  expr="o(move:answer(paris) speaker:usr)"/>
+         </go>
+         <go on="says"
+                     if=""Eventdata.speaker==sys andthen
+                           Eventdata.move==ask(to)">
+            <send on="says"
+                  expr="o(move:answer(london) speaker:usr)"/>
+         </go>
+         <go on="says"
+                     if=""Eventdata.speaker==sys andthen
+                           Eventdata.move==ask(month)">
+            <send on="says"
+                  expr="o(move:answer(april) speaker:usr)"/>
+         </go>
+         <go on="says"
+                     if=""Eventdata.speaker==sys andthen
+                           Eventdata.move==ask('class')">
+            <send on="says"
+                  expr="o(move:answer(business) speaker:usr)"/>
+         </go>
+         <go on="says"
+                     if=""Eventdata.speaker==sys andthen
+                           Eventdata.move==answer(1234)">
+            <send on="says"
+                  expr="o(move:quit speaker:usr)"/>
+         </go>
+      </state>
+
+      <state id="monitor">
+         <go on="says">
+            <log label="Eventdata.speaker" expr="Eventdata.move"/>
+         </go>
+      </state>
+
+   </parallel>
+
+   <final id="quit"/>
+
+</scxml>
+

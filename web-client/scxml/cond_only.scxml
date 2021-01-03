@@ -1,0 +1,9 @@
+<scxml datamodel="web-prolog" initial="s">
+   <state id="s">
+      <go>
+          sleep(1), 
+          writeln(hello)
+      </go>
+   </state>
+</scxml>
+

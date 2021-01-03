@@ -1,0 +1,23 @@
+<scxml initial="process">
+   <state id="process">
+      <initial>
+         <go to="s1" />
+      </initial>
+      <history id="h">
+         <go to="s1" />
+      </history>
+      <state id="s1">
+         <go to="s2" on="e1" />
+      </state>
+      <state id="s2">
+         <go to="s1" on="e2" />
+      </state>
+      <go to="interrupted" on="pause" />
+      <go to="terminated" on="terminate" />
+   </state>
+   <state id="interrupted">
+      <go to="h" on="resume" />
+      <go to="terminated" on="terminate" />
+   </state>
+   <final id="terminated" />
+</scxml>

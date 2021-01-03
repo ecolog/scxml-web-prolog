@@ -247,6 +247,20 @@ run(File, Pid) :-
     spawn((interpret(File)), Pid).
 
 
+/** interpret/1
+    
+The purpose of  this procedure is to  initialize the interpreter and to  start processing. In
+order to  interpret an SCXML document,  first (optionally) perform [xinclude]  processing and
+(optionally) validate the  document, throwing an exception if validation  fails. Then convert
+initial attributes  to <initial> container children  with transitions to the  state specified
+by the attribute.  (This step is done purely  to simplify the statement of  the algorithm and
+has no  effect on  the system's behavior.  Such transitions will  not contain  any executable
+content). Initialize the global data structures, including  the data model. If binding is set
+to 'early',  initialize the  data model. Then  execute the global  <script> element,  if any.
+Finally call  enterStates on the  initial configuration, set  the global running  variable to
+true and start the interpreter's event loop.
+*/
+
 interpret(File) :-
     clean,
     scxml_parse(File),
@@ -264,6 +278,35 @@ interpret(File) :-
     main_event_loop.
 
 
+/** main_event_loop/0
+    
+This  loop runs  until  we  enter a  top-level  final state  or  an  external entity  cancels
+processing.  In either  case 'running'  will be  set to  false (see  EnterStates, below,  for
+termination by  entering a top-level  final state.) At  the top of  the loop, we  have either
+just entered the state  machine, or we have just processed an  external event. Each iteration
+through the loop consists of four main  steps: 1) Complete the macrostep by repeatedly taking
+any internally  enabled transitions,  namely those that  don't require an  event or  that are
+triggered by  an internal  event. After each  such transition/microstep, check  to see  if we
+have  reached a  final  state. 2)  When  there  are no  more  internally enabled  transitions
+available, the  macrostep is done. Execute  any <invoke> tags  for states that we  entered on
+the last  iteration through the  loop 3) If  any internal events  have been generated  by the
+invokes, repeat  step 1 to  handle any errors  raised by the  <invoke> elements. 4)  When the
+internal event queue  is empty, wait for  an external event and then  execute any transitions
+that it  triggers. However  special preliminary  processing is  applied to  the event  if the
+state has executed  any <invoke> elements. First,  if this event was generated  by an invoked
+process,  apply  <finalize>  processing  to  it. Secondly,  if  any  <invoke>  elements  have
+autoforwarding set, forward the  event to them. These steps apply  before the transitions are
+taken.This event loop thus enforces run-to-completion  semantics, in which the system process
+an external  event and  then takes all  the 'follow-up' transitions  that the  processing has
+enabled before  looking for another  external event. For  example, suppose that  the external
+event queue contains events ext1 and ext2 and  the machine is in state s1. If processing ext1
+takes the  machine to s2 and  generates internal event int1,  and s2 contains a  transition t
+triggered by  int1, the  system is guaranteed  to take  t, no matter  what transitions  s2 or
+other states have  that would be triggered by  ext2. Note that this is true  even though ext2
+was already  in the external event  queue when int1  was generated. In effect,  the algorithm
+treats the processing of int1 as finishing up the processing of ext1.
+*/
+    
 main_event_loop :-
     (   running
     ->  main_event_loop2
@@ -300,6 +343,25 @@ main_event_loop(Event) :-
     ).
 
 
+/** exit_interpreter/1
+    
+The purpose  of this procedure  is to exit  the current SCXML  process by exiting  all active
+states. If the machine  is in a top-level final state, a Done  event is generated. (Note that
+in  this case,  the  final  state will  be  the only  active  state.)  The implementation  of
+returnDoneEvent is platform-dependent,  but if this session  is the result of  an <invoke> in
+another SCXML session, returnDoneEvent will cause  the event done.invoke.<id> to be placed in
+the external  event queue of  that session, where  <id> is the  id generated in  that session
+when the <invoke> was executed.
+*/
+
+exit_interpreter :-
+   retractall(running),
+%   halt,
+   true.
+
+
+
+
 invoke(State) :-
     to_be_invoked(State, pengine, Options),
     pengine_spawn(Pid, Options),
@@ -309,10 +371,7 @@ invoke(State) :-
 invoke(_).
 
 
-exit_interpreter :-
-   retractall(running),
-%   halt,
-   true.
+
 
 
 update_eventdata(Event) :-
@@ -433,7 +492,6 @@ configuration_add(State) :-
     -> true
     ;  retractall(configuration(_)), 
        assert(configuration(NewConfiguration))
-       %debug(scxml(config), 'New configuration: ~p', [NewConfiguration])
     ).
     
 configuration_delete(State) :-
@@ -441,7 +499,6 @@ configuration_delete(State) :-
     subtract(Configuration, [State], NewConfiguration),
     retractall(configuration(_)), 
     assert(configuration(NewConfiguration)).
-    %debug(scxml(config), 'New configuration: ~p', [NewConfiguration]).
 
             
 
@@ -452,7 +509,6 @@ states_to_invoke_add(State) :-
     -> true
     ;  retractall(states_to_invoke(_)), 
        assert(states_to_invoke(NewStatesToInvoke))
-       %debug(scxml(config), 'New states to invoke: ~p', [NewStatesToInvoke])
     ).
     
 states_to_invoke_delete(State) :-
@@ -460,7 +516,6 @@ states_to_invoke_delete(State) :-
     subtract(StatesToInvoke, [State], NewStatesToInvoke),
     retractall(states_to_invoke(_)), 
     assert(states_to_invoke(NewStatesToInvoke)).
-    %debug(scxml(config), 'New states to invoke: ~p', [NewStatesToInvoke]).
     
    
    

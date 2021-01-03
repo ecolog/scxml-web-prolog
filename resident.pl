@@ -1,5 +1,5 @@
 :- use_module(web_prolog).
-:- use_module('web-client/scxml_parser.pl').
+:- use_module('web-client/scxml.pl').
 
         
         

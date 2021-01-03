@@ -10,7 +10,7 @@
 
 :- use_module('../web_prolog.pl').
 
-:- use_module(web_prolog:scxml_parser).
+:- use_module(web_prolog:scxml).
 
 %:- use_module(lib/admin/admin).
 %:- use_module(lib/admin/server_statistics).

@@ -48,6 +48,8 @@
 :- nodebug(http(_)).
 
 
+
+
 scxml_parse(File) :-
     load_xml_file(File, ListOfContent),
     model_generate(ListOfContent, null).
@@ -242,6 +244,7 @@ clean :-
 
 
 run(File, Pid) :-
+    debug(scxml(info), '*** Processing file ~p', [File]),
     spawn(interpret(File), Pid).
 
 
@@ -308,7 +311,7 @@ treats the processing of int1 as finishing up the processing of ext1.
 main_event_loop :-
     (   running
     ->  main_event_loop2
-    ;   debug(scxml(info), '*** END OF PROCESSING ***\n', [])
+    ;   debug(scxml(info), '*** End of processing\n', [])
     ).
     
 main_event_loop2 :-

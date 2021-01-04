@@ -23,12 +23,12 @@
       <state id="Color">
         <onentry>
           writeln('What color do you want?'),
-          raise(timeout, 25)
+          self(Self),
+          snd(Self, timeout, [delay(5), id(a)])
         </onentry>
-<!--        <onexit>
-          cancel_send(a)
+        <onexit>
+          cancel(a)
         </onexit>
--->
         <go to="selectFormItem" on="says(color(Color))">
           assert(color(Color))
         </go>
@@ -36,12 +36,12 @@
       <state id="Size">
         <onentry>
           writeln('What size do you want?'),
-          raise(timeout, 25)
+          self(Self),
+          snd(Self, timeout, [delay(5), id(a)])
         </onentry>
-<!--        <onexit>
-          cancel_send(b)
+        <onexit>
+          cancel(b)
         </onexit>
--->
         <go to="selectFormItem" on="says(size(Size))">
           assert(size(Size))
         </go>

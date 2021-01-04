@@ -41,7 +41,7 @@
                     assert(size(Size))
             </go>
         </state>
-        <go to="h" on="_">
+        <go to="h" on="input(Input)">
             writeln('I did not understand.')
         </go>
     </state>

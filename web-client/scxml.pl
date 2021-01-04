@@ -1,6 +1,7 @@
 :- module(scxml, [
     scxml_parse/1,
     interpret/1,
+    snd/3,
     run/2,
     list/0,
     clean/0
@@ -8,6 +9,7 @@
 
 :- use_module('../web_prolog.pl').
 
+:- use_module(library(option)).
 :- use_module(library(sort)).
 :- use_module(library(ordsets)).
 :- use_module(library(apply)).
@@ -831,25 +833,32 @@ enqueue_internal_event(Event) :-
     internal_queue(Internal),
     thread_send_message(Internal, Event).
     
+
+    
+    
 raise(Event) :-
     enqueue_internal_event(Event).
-    
-/*
-raise(Event) :-
-    self(Self),
-    send(Self, Event).
 
 
-raise(Event, Delay) :-
-    self(Self),
-    thread_create(send_after(Self, Event, Delay), _, []).
+
+snd(Pid, Message, Options) :-
+    option(delay(Delay), Options, 0),
+    thread_create(send_after(Pid, Message, Delay), CancelPid, []),
+    (   option(id(ID), Options)
+    ->  register(ID, CancelPid)
+    ;   true
+    ).
     
-send_after(Parent, Event, Delay) :-
+    
+send_after(Parent, Message, Delay) :-
     receive({
        after(Delay) -> 
-           Parent ! Event
+           Parent ! Message,
+           debug(scxml(info), '   Sent: ~p', [Message])
     }).       
-*/
+
+cancel(ID) :-
+    exit(ID, cancel).
 
 
 log(Expr) :-

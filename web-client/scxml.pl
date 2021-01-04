@@ -336,7 +336,7 @@ main_event_loop2 :-
         main_event_loop
     ;   receive({Event -> true}),
         debug(scxml(event), '   Ext. event: ~p', [Event]),
-        (   Event == cancel
+        (   Event == 'Cancel'
         ->  retractall(running),
             main_event_loop
         ;   update_eventdata(Event),

@@ -11,13 +11,11 @@
 :- use_module(library(sort)).
 :- use_module(library(ordsets)).
 :- use_module(library(apply)).
-
 :- use_module(library(debug)).
 
 :- prolog_ide(debug_monitor).
 %:- prolog_ide(thread_monitor).
 
-%:- openlog(scxml, [ndelay], syslog).
 	
     
 :- dynamic state/2, 
@@ -244,7 +242,7 @@ clean :-
 
 
 run(File, Pid) :-
-    spawn((interpret(File)), Pid).
+    spawn(interpret(File), Pid).
 
 
 /** interpret/1
@@ -345,6 +343,8 @@ main_event_loop(Event) :-
 
 /** exit_interpreter/1
     
+NOT YET IMPLEMENTED!
+    
 The purpose  of this procedure  is to exit  the current SCXML  process by exiting  all active
 states. If the machine  is in a top-level final state, a Done  event is generated. (Note that
 in  this case,  the  final  state will  be  the only  active  state.)  The implementation  of
@@ -360,32 +360,120 @@ exit_interpreter :-
    true.
 
 
+/** select_transitions/2
 
+The  purpose of  the selectTransitions()  procedure is  to collect  the transitions  that are
+enabled by this event in the current configuration.
 
-invoke(State) :-
-    to_be_invoked(State, pengine, Options),
-    pengine_spawn(Pid, Options),
-    debug(scxml(invoke), '      Invoked: pengine ~p at ~p', [Pid, State]),
-    raise(spawned(Pid)),
-    fail.
-invoke(_).
+Create an empty  set of enabledTransitions. For  each atomic state , find  a transition whose
+'event' attribute matches  event and whose condition evaluates to  true. If multiple matching
+transitions are  present, take the first  in document order.  If none are present,  search in
+the state's ancestors in  ancestry order until one is found. As soon  as such a transition is
+found,  add  it  to  enabledTransitions,  and  proceed  to  the  next  atomic  state  in  the
+configuration. If no such  transition is found in the state or its  ancestors, proceed to the
+next state  in the configuration.  When all atomic states  have been visited  and transitions
+selected, filter out any preempted transitions and return the resulting set.
+*/
+   
+select_transitions(Event, EnabledTransitions) :-
+    configuration(Configuration), 
+    findall(EnabledTransition,
+           (	member(State, Configuration),
+           		is_atomic(State),
+           		select_transition(Event, State, EnabledTransition)   
+		   ),
+    EnabledTransitions0),
+    EnabledTransitions0 \= [],
+    list_to_ord_set(EnabledTransitions0, EnabledTransitions1),
+    remove_conflicting_transitions(EnabledTransitions1, EnabledTransitions),
+    maplist(trace_transition, EnabledTransitions). 
+        
+select_transition(null, State, t(Ancestor, Targets, Actions)) :-
+    ancestor(State, null, Ancestor),
+    transition(Ancestor, '', Condition, Targets, Actions),
+    once(Condition),
+    !.
+select_transition(Event, State, t(Ancestor, Targets, Actions)) :-
+    Event \= null,
+    ancestor(State, null, Ancestor),
+    transition(Ancestor, Event, Condition, Targets, Actions),
+    once(Condition),
+    !.
+    
+    
+/** remove_conflicting_transitions/2    
+    
+NOT YET IMPLEMENTED!
 
+enabledTransitions will contain  multiple transitions only if a parallel  state is active. In
+that case, we  may have one transition  selected for each of its  children. These transitions
+may conflict with each other in the  sense that they have incompatible target states. Loosely
+speaking,  transitions are  compatible when  each one  is contained  within a  single <state>
+child of  the <parallel>  element. Transitions  that aren't contained  within a  single child
+force the  state machine to leave  the <parallel> ancestor  (even if they reenter  it later).
+Such transitions conflict with  each other, and with transitions that  remain within a single
+<state> child, in that  they may have targets that cannot be  simultaneously active. The test
+that  transitions  have  non-intersecting  exit  sets  captures  this  requirement.  (If  the
+intersection  is null,  the  source and  targets  of  the two  transitions  are contained  in
+separate <state>  descendants of <parallel>. If  intersection is non-null, then  at least one
+of the  transitions is  exiting the  <parallel>). When such  a conflict  occurs, then  if the
+source state of one of  the transitions is a descendant of the source  state of the other, we
+select  the  transition in  the  descendant.  Otherwise we  prefer  the  transition that  was
+selected by the earlier  state in document order and discard the  other transition. Note that
+targetless  transitions  have empty  exit  sets  and thus  do  not  conflict with  any  other
+transitions.We start  with a list of  enabledTransitions and produce a  conflict-free list of
+filteredTransitions. For each  t1 in enabledTransitions, we  test it against all  t2 that are
+already selected in  filteredTransitions. If there is  a conflict, then if  t1's source state
+is a  descendant of t2's source  state, we prefer  t1 and say that  it preempts t2 (so  we we
+make a  note to remove  t2 from  filteredTransitions). Otherwise, we  prefer t2 since  it was
+selected in an  earlier state in document order,  so we say that it preempts  t1. (There's no
+need to  do anything in  this case since t2  is already in  filteredTransitions. Furthermore,
+once one transition preempts t1, there is no  need to test t1 against any other transitions.)
+Finally,  if  t1  isn't  preempted  by any  transition  in  filteredTransitions,  remove  any
+transitions that it preempts and add it to that list.
+    
+NOT YET IMPLEMENTED!
+*/
+    
+remove_conflicting_transitions(Transitions0, Transitions) :-
+    Transitions = Transitions0.
+ 
+ 
+/** microstep/1
 
-
-
-
-update_eventdata(Event) :-
-    retractall(event(_)),
-    assert(event(Event)).
-
+The purpose of the  microstep procedure is to process a single set  of transitions. These may
+have been enabled by  an external event, an internal event, or by  the presence or absence of
+certain values in the data model at the  current point in time. The processing of the enabled
+transitions must  be done in  parallel ('lock  step') in the  sense that their  source states
+must first be  exited, then their actions  must be executed, and finally  their target states
+entered.If  a single  atomic state  is active,  then enabledTransitions  will contain  only a  single
+transition. If  multiple states are active  (i.e., we are  in a parallel region),  then there
+may be multiple transitions,  one per active atomic state (though some  states may not select
+a transition.) In  this case, the transitions are  taken in the document order  of the atomic
+states that selected them.
+*/
 
 microstep(EnabledTransitions) :-
     exit_states(EnabledTransitions),
-    execute_transitions(EnabledTransitions),
+    execute_transition_content(EnabledTransitions),
     enter_states(EnabledTransitions).
-
-
-   
+    
+    
+/** exit_states/1
+    
+Compute the set  of states to exit. Then  remove all the states on statesToExit  from the set
+of states that will have invoke processing done  at the start of the next macrostep. (Suppose
+macrostep M1 consists of microsteps  m11 and m12. We may enter state s in  m11 and exit it in
+m12. We will  add s to statesToInvoke  in m11, and must  remove it in m12.  In the subsequent
+macrostep  M2, we  will apply  invoke processing  to all  states that  were entered,  and not
+exited, in M1.) Then  convert statesToExit to a list and sort it  in exitOrder.For each state
+s in the list, if s has a deep history state  h, set the history value of h to be the list of
+all atomic  descendants of  s that  are members in  the current  configuration, else  set its
+value  to be  the  list of  all immediate  children  of s  that  are members  of the  current
+configuration. Again for  each state s in  the list, first execute any  onexit handlers, then
+cancel any ongoing invocations, and finally remove s from the current configuration.
+*/
+    
 exit_states(EnabledTransitions) :-
     configuration(Configuration),
     compute_exit_set(EnabledTransitions, Configuration, StatesToExit),
@@ -394,7 +482,7 @@ exit_states(EnabledTransitions) :-
     (   member(State, SortedStatesToExit), 
         history(H, State, Depth),  
         (  Depth == deep 
-        -> findall(S, (member(S, Configuration), is_atomic(S), isDescendant(S, State)), SS)
+        -> findall(S, (member(S, Configuration), is_atomic(S), is_descendant(S, State)), SS)
         ;  findall(S, (member(S, Configuration), has_parent(S, State)), SS)
         ), 
         update_history_value(H, SS), 
@@ -402,16 +490,6 @@ exit_states(EnabledTransitions) :-
     ;   true
     ), 
     process_states_to_exit(SortedStatesToExit).
-    
-
-compute_exit_set(Transitions, Configuration, StatesToExit) :-
-    findall(State, (member(t(Source, Targets, _), Transitions), 
-                   Targets \= [], 
-                   find_LCA([Source|Targets], LCA), 
-                   member(State, Configuration), 
-                   isDescendant(State, LCA)), 
-           StatesToExit).
-
 
 process_states_to_exit([]).
 process_states_to_exit([State|States]) :-
@@ -419,21 +497,55 @@ process_states_to_exit([State|States]) :-
     % TODO: for inv in s.invoke: cancelInvoke(inv)
     configuration_delete(State),
     process_states_to_exit(States).
+    
+    
+/** compute_exit_set/3
 
-       
+For  each transition  t in  enabledTransitions,  if t  is  targetless then  do nothing,  else
+compute the  transition's domain.  (This will  be the source  state in  the case  of internal
+transitions) or  the least  common compound  ancestor state  of the  source state  and target
+states of t (in  the case of external transitions. Add to the  statesToExit set all states in
+the configuration that are descendants of the domain.
+*/    
 
-execute_content(Content) :-
-    maplist(call, Content).
+compute_exit_set(Transitions, Configuration, StatesToExit) :-
+    findall(State, (member(t(Source, Targets, _), Transitions), 
+                   Targets \= [], 
+                   find_LCCA([Source|Targets], LCA), 
+                   member(State, Configuration), 
+                   is_descendant(State, LCA)), 
+           StatesToExit).
 
-                   
-execute_transitions(EnabledTransitions) :-
+     
+/** execute_transition_content/1
+
+For each transition in the list of enabledTransitions, execute its executable content.
+*/
+
+execute_transition_content(EnabledTransitions) :-
     (   member(t(_, _, Children), EnabledTransitions), 
         member(Child, Children), 
         call(Child), 
         fail
     ;   true
     ).
-   
+
+
+/** enter_states/1
+
+First, compute  the list of all  the states that  will be entered  as a result of  taking the
+transitions in enabledTransitions.  Add them to statesToInvoke so that  invoke processing can
+be done at  the start of the next macrostep.  Convert statesToEnter to a list and  sort it in
+entryOrder. For each state  s in the list, first add s to  the current configuration. Then if
+we are using late binding, and this is the  first time we have entered s, initialize its data
+model. Then execute any  onentry handlers. If s's initial state is  being entered by default,
+execute any  executable content in the  initial transition. If a  history state in s  was the
+target of  a transition, and s  has not been entered  before, execute the content  inside the
+history state's default  transition. Finally, if s  is a final state,  generate relevant Done
+events. If we have reached a top-level final state,  set running to false as a signal to stop
+processing.
+*/
+
 enter_states(EnabledTransitions) :-
     compute_entry_set(EnabledTransitions, StatesToEnter), 
     predsort(entry_order, StatesToEnter, SortedStatesToEnter), 
@@ -443,25 +555,6 @@ enter_states(EnabledTransitions) :-
     debug(scxml(config), 'Configuration: ~p', [NewConfiguration]).
 
 
-compute_entry_set(Transitions, StatesToEnter) :-
-    findall(StateToEnter, 
-            (member(t(Source, Targets, _), Transitions), 
-             Targets \= [], 
-             find_LCA([Source|Targets], LCA), 
-             member(State, Targets), 
-             (  is_history(State)
-             ->  (   historyValue(State, States)
-                 ->  member(HS, States), 
-                     state_to_enter(HS, LCA, StateToEnter)
-                 ;   transition(State, '', true, States, _), 
-                     member(HS, States), 
-                     state_to_enter(HS, LCA, StateToEnter)
-                 )
-             ;   state_to_enter(State, LCA, StateToEnter)
-             )),  
-          StatesToEnter).
-
-            
 process_states_to_enter([]).
 process_states_to_enter([State|States]) :-
     configuration_add(State),
@@ -484,6 +577,170 @@ process_states_to_enter([State|States]) :-
     ),
     process_states_to_enter(States).
     
+    
+/** compute_entry_set/2
+
+Compute the complete set of states that will  be entered as a result of taking 'transitions'.
+This value will  be returned in 'statesToEnter'  (which is modified by  this procedure). Also
+place in  'statesForDefaultEntry' the  set of  all states whose  default initial  states were
+entered. First gather up  all the target states in 'transitions'. Then add  them and, for all
+that are  not atomic states,  add all of  their (default) descendants  until we reach  one or
+more atomic  states. Then add  any ancestors that  will be entered  within the domain  of the
+transition. (Ancestors outside of the domain of the transition will not have been exited.)
+*/
+    
+compute_entry_set(Transitions, StatesToEnter) :-
+    findall(StateToEnter, 
+            (member(t(Source, Targets, _), Transitions), 
+             Targets \= [], 
+             find_LCCA([Source|Targets], LCA), 
+             member(State, Targets), 
+             (  is_history(State)
+             ->  (   historyValue(State, States)
+                 ->  member(HS, States), 
+                     state_to_enter(HS, LCA, StateToEnter)
+                 ;   transition(State, '', true, States, _), 
+                     member(HS, States), 
+                     state_to_enter(HS, LCA, StateToEnter)
+                 )
+             ;   state_to_enter(State, LCA, StateToEnter)
+             )),  
+          StatesToEnter).
+
+
+/** state_to_enter/3
+
+NB: state_to_enter/3 corresponds to addDescendantStatesToEnter() & addAncestorStatesToEnter()
+in the algorithm. TODO: Rethink this, and its relation to compute_entry_set/2!
+
+The purpose of this  procedure is to add to statesToEnter 'state' and  any of its descendants
+that the  state machine will end  up entering when it  enters 'state'. (N.B. If  'state' is a
+history pseudo-state, we  dereference it and add  the history value instead.)  Note that this
+procedure permanently modifies both statesToEnter  and statesForDefaultEntry. First, if state
+is  a history  state then  add either  the history  values associated  with state  or state's
+default  target to  statesToEnter. Then  (since the  history value  may not  be an  immediate
+descendant  of 'state's  parent) add  any  ancestors between  the history  value and  state's
+parent. Else (if state is not a history  state), add state to statesToEnter. Then if state is
+a compound  state, add state  to statesForDefaultEntry and recursively  call addStatesToEnter
+on its default initial  state(s). Then, since the default initial states  may not be children
+of 'state', add any  ancestors between the default initial states  and 'state'. Otherwise, if
+state is a parallel state, recursively call  addStatesToEnter on any of its child states that
+don't already have a descendant on statesToEnter.
+          
+Add to statesToEnter any ancestors of 'state'  up to, but not including, 'ancestor' that must
+be entered in  order to enter 'state'. If  any of these ancestor states is  a parallel state,
+we must fill in its descendants as well.
+*/            
+
+state_to_enter(State, _Root, State).
+state_to_enter(State, _Root, StateToEnter) :-
+    is_parallel(State),
+    has_parent(Child, State),
+    state_to_enter(Child, State, StateToEnter).
+state_to_enter(State, _Root, StateToEnter) :-
+    is_compound(State),
+    transition(init(State), '', true, Children, _),
+    member(Child, Children),
+    state_to_enter(Child, State, StateToEnter).
+state_to_enter(State, Root, StateToEnter) :-
+    proper_ancestor(State, Root, StateToEnter).
+state_to_enter(State, Root, StateToEnter) :-
+    proper_ancestor(State, Root, Ancestor),
+    is_parallel(Ancestor),
+    has_parent(Child, Ancestor),
+    state_to_enter(Child, Ancestor, StateToEnter).
+
+
+/** state_to_enter/3
+
+Return true if  s is a compound  <state> and one of  its children is an  active <final> state
+(i.e.  is a  member  of  the current  configuration),  or  if s  is  a  <parallel> state  and
+isInFinalState is true of all its children.
+*/
+    
+is_in_final_state(S) :-
+    is_compound(S),
+    has_parent(Child, S),
+    is_final(Child),
+    configuration(Configuration),
+    memberchk(Child, Configuration).
+is_in_final_state(S) :-
+    is_parallel(S),
+    forall(has_parent(Child, S), is_in_final_state(Child)).
+    
+    
+/** find_LCCA/2
+
+The Least  Common Compound  Ancestor is the  <state> or <scxml>  element s  such that s  is a
+proper ancestor  of all states on  stateList and no descendant  of s has this  property. Note
+that there is guaranteed to be such an  element since the <scxml> wrapper element is a common
+ancestor of all  states. Note also that since  we are speaking of proper  ancestor (parent or
+parent of a parent, etc.) the LCCA is never a member of stateList.
+*/
+    
+find_LCCA([S|Ss], Ancestor) :-
+    proper_ancestor(S, null, Ancestor),
+    forall(member(S0,Ss), is_descendant(S0, Ancestor)),
+    !.
+
+
+/** proper_ancestor/3
+
+If state2  is null, returns the  set of all ancestors  of state1 in ancestry  order (state1's
+parent followed  by the parent's  parent, etc.  up to an  including the <scxml>  element). If
+state2 is non-null, returns  in ancestry order the set of all ancestors  of state1, up to but
+not including state2. (A "proper ancestor" of a  state is its parent, or the parent's parent,
+or the parent's parent's  parent, etc.))If state2 is state1's parent, or  equal to state1, or
+a descendant of state1, this returns the empty set.
+*/
+    
+proper_ancestor(StateID, RootID, ParentID) :-
+    has_parent(StateID, ParentID),
+    ParentID \= RootID.
+proper_ancestor(StateID, RootID, AncestorID) :-
+    has_parent(StateID, ParentID),
+    ParentID \= RootID,
+    proper_ancestor(ParentID, RootID, AncestorID).
+
+
+ancestor(StateID, _RootID, StateID).
+ancestor(StateID, RootID, AncestorID) :-
+    proper_ancestor(StateID, RootID, AncestorID).
+
+
+/** is_descendant/2
+
+Returns 'true'  if state1 is a  descendant of state2  (a child, or a  child of a child,  or a
+child of a child of a child, etc.) Otherwise returns 'false'.
+*/
+    
+is_descendant(StateID, AncestorID) :-
+    proper_ancestor(StateID, null, AncestorID).   
+
+
+/* end of documented predicates! */
+ 
+
+invoke(State) :-
+    to_be_invoked(State, pengine, Options),
+    pengine_spawn(Pid, Options),
+    debug(scxml(invoke), '      Invoked: pengine ~p at ~p', [Pid, State]),
+    raise(spawned(Pid)),
+    fail.
+invoke(_).
+
+
+
+update_eventdata(Event) :-
+    retractall(event(_)),
+    assert(event(Event)).
+
+
+       
+execute_content(Content) :-
+    maplist(call, Content).
+
+
 
 configuration_add(State) :-
     configuration(Configuration),
@@ -522,38 +779,6 @@ states_to_invoke_delete(State) :-
 update_history_value(H,  SS) :-
     retractall(historyValue(H, _)), 
     assert(historyValue(H, SS)).
-
-
-
-state_to_enter(State, _Root, State).
-state_to_enter(State, _Root, StateToEnter) :-
-    is_parallel(State),
-    has_parent(Child, State),
-    state_to_enter(Child, State, StateToEnter).
-state_to_enter(State, _Root, StateToEnter) :-
-    is_compound(State),
-    transition(init(State), '', true, Children, _),
-    member(Child, Children),
-    state_to_enter(Child, State, StateToEnter).
-state_to_enter(State, Root, StateToEnter) :-
-    proper_ancestor(State, Root, StateToEnter).
-state_to_enter(State, Root, StateToEnter) :-
-    proper_ancestor(State, Root, Ancestor),
-    is_parallel(Ancestor),
-    has_parent(Child, Ancestor),
-    state_to_enter(Child, Ancestor, StateToEnter).
-
-
-
-is_in_final_state(S) :-
-    is_compound(S),
-    has_parent(Child, S),
-    is_final(Child),
-    configuration(Configuration),
-    memberchk(Child, Configuration).
-is_in_final_state(S) :-
-    is_parallel(S),
-    forall(has_parent(Child, S), is_in_final_state(Child)).
    
 
 
@@ -592,59 +817,12 @@ is_final(State) :- final(State, _).
 
 is_scxml(State) :- state(State, null).
    
-   
-select_transitions(Event, EnabledTransitions) :-
-    configuration(Configuration), 
-    findall(EnabledTransition,
-           (	member(State, Configuration),
-           		is_atomic(State),
-           		select_transition(Event, State, EnabledTransition)   
-		   ),
-    EnabledTransitions0),
-    EnabledTransitions0 \= [],
-    list_to_ord_set(EnabledTransitions0, EnabledTransitions),
-    maplist(trace_transition, EnabledTransitions). 
-        
-select_transition(null, State, t(Ancestor, Targets, Actions)) :-
-    ancestor(State, null, Ancestor),
-    transition(Ancestor, '', Condition, Targets, Actions),
-    once(Condition),
-    !.
-select_transition(Event, State, t(Ancestor, Targets, Actions)) :-
-    Event \= null,
-    ancestor(State, null, Ancestor),
-    transition(Ancestor, Event, Condition, Targets, Actions),
-    once(Condition),
-    !.
 
 
 trace_transition(t(State, Targets ,_)) :-
     debug(scxml(info), '   Transition: ~p => ~p', [State, Targets]).
 
 
-proper_ancestor(StateID, RootID, ParentID) :-
-    has_parent(StateID, ParentID),
-    ParentID \= RootID.
-proper_ancestor(StateID, RootID, AncestorID) :-
-    has_parent(StateID, ParentID),
-    ParentID \= RootID,
-    proper_ancestor(ParentID, RootID, AncestorID).
-
-
-ancestor(StateID, _RootID, StateID).
-ancestor(StateID, RootID, AncestorID) :-
-    proper_ancestor(StateID, RootID, AncestorID).
-
-
-isDescendant(StateID, AncestorID) :-
-    proper_ancestor(StateID, null, AncestorID).   
-
-
-
-find_LCA([S|Ss], Ancestor) :-
-    proper_ancestor(S, null, Ancestor),
-    forall(member(S0,Ss), isDescendant(S0, Ancestor)),
-    !.
 
 enqueue_internal_event(Event) :-
     internal_queue(Internal),

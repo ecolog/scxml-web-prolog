@@ -247,7 +247,9 @@ clean :-
 
 run(File, Pid) :-
     debug(scxml(info), '*** Processing file ~p', [File]),
-    spawn(interpret(File), Pid).
+    spawn(interpret(File), Pid, [
+        monitor(true)
+    ]).
 
 
 /** interpret/1
@@ -313,7 +315,8 @@ treats the processing of int1 as finishing up the processing of ext1.
 main_event_loop :-
     (   running
     ->  main_event_loop2
-    ;   debug(scxml(info), '*** End of processing\n', [])
+    ;   exit_interpreter,
+        debug(scxml(info), '*** End of processing (a down message was sent to parent)\n', [])
     ).
     
 main_event_loop2 :-
@@ -332,9 +335,13 @@ main_event_loop2 :-
         assert(states_to_invoke([])), 
         main_event_loop
     ;   receive({Event -> true}),
-        update_eventdata(Event),
         debug(scxml(event), '   Ext. event: ~p', [Event]),
-        main_event_loop(Event)
+        (   Event == cancel
+        ->  retractall(running),
+            main_event_loop
+        ;   update_eventdata(Event),
+            main_event_loop(Event)
+        )
     ).
     
 main_event_loop(Event) :-
@@ -357,13 +364,37 @@ returnDoneEvent is platform-dependent,  but if this session  is the result of  a
 another SCXML session, returnDoneEvent will cause  the event done.invoke.<id> to be placed in
 the external  event queue of  that session, where  <id> is the  id generated in  that session
 when the <invoke> was executed.
+    
+procedure exitInterpreter():
+    statesToExit = configuration.toList().sort(exitOrder)
+    for s in statesToExit:
+        for content in s.onexit.sort(documentOrder):
+            executeContent(content)
+        for inv in s.invoke:
+            cancelInvoke(inv)
+        configuration.delete(s)
+        if isFinalState(s) and isScxmlElement(s.parent):   
+            returnDoneEvent(s.donedata)
 */
 
 exit_interpreter :-
-   retractall(running),
-%   halt,
-   true.
-
+    configuration(Configuration),
+    predsort(exit_order, Configuration, StatesToExit),
+    exit_interpreter(StatesToExit).
+   
+exit_interpreter([]).
+exit_interpreter([State|States]) :-
+    forall(onentry(State, Content), execute_content(Content)),
+%   for inv in s.invoke:
+%       cancelInvoke(inv)
+    configuration_delete(State),
+    (   is_final(State),
+        has_parent(State, Parent),
+        is_scxml_element(Parent)
+    ->  true
+    ;   exit_interpreter(States)
+    ).
+    
 
 /** select_transitions/2
 
@@ -567,7 +598,7 @@ process_states_to_enter([State|States]) :-
     forall(onentry(State, Content), execute_content(Content)),    
     (   is_final(State)
     ->  (   has_parent(State, Parent),
-            is_scxml(Parent)
+            is_scxml_element(Parent)
         ->  retractall(running)
         ;   has_parent(State, Parent),
             enqueue_internal_event(done(Parent)),
@@ -820,7 +851,7 @@ is_history(State) :- history(State, _, _).
 
 is_final(State) :- final(State, _).
 
-is_scxml(State) :- state(State, null).
+is_scxml_element(State) :- state(State, null).
    
 
 
@@ -849,7 +880,6 @@ snd(Pid, Message, Options) :-
     ;   true
     ).
     
-    
 send_after(Parent, Message, Delay) :-
     receive({
        after(Delay) -> 
@@ -859,6 +889,7 @@ send_after(Parent, Message, Delay) :-
 
 cancel(ID) :-
     exit(ID, cancel).
+
 
 
 log(Expr) :-

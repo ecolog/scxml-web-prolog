@@ -6,13 +6,9 @@ The implemention is more or less complete but ...
 
 ```xml
 <scxml initial="s">
-
    <datamodel>
-   
       p(a,b). p(b,c). p(c,d).
-
    </datamodel>
-
    <state id="s">
       <go if="p(X,Y), p(Y,Z), \+p(X,Z)">
           assert(p(X,Z))
@@ -21,9 +17,7 @@ The implemention is more or less complete but ...
           log(List)
       </go>
    </state>
-
    <final id="f"/>
-
 </scxml> 
 ```
 

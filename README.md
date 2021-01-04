@@ -1,16 +1,31 @@
-# Web Prolog
+# SCXML + Web Prolog
 
-Elevator pitch:
+This is a proof-of-concept implemention showing how Prolog (Web Prolog to be more precise) can be used as a datamodel and scripting language in State Chart XML (SCXML).
 
-> Imagine a dialect of **Prolog** with processes and mailboxes and send and receive – all the means necessary for powerful concurrent and distributed programming. Alternatively, think of it as a dialect of **Erlang** with logic variables, backtracking search and a built-in database of facts and rules – the means for logic programming, knowledge representation and reasoning. Also, think of it as a **web logic programming language**. This is what **Web Prolog** is all about. 
+The implemention is more or less complete but ... 
 
-This is a proof-of-concept demonstration/tutorial only. The system is _not_ yet ready for online deployment. But you can install it locally, work through the tutorial, and play with lots of code examples.
+```xml
+<scxml initial="s">
 
-Design and implementation by Torbjörn Lager, with a _lot_ of help from Jan Wielemaker. 
+   <datamodel>
+   
+      p(a,b). p(b,c). p(c,d).
 
-You may also want to have a look at SWISH (https://swish.swi-prolog.org/) which is a stable online IDE for Prolog, running 24/7 and having lots of users, especially among students taking CS courses involving logic programming and Prolog. 
+   </datamodel>
 
-One of my long term goals is to replace the SWISH back-end with a Web Prolog node.
+   <state id="s">
+      <go if="p(X,Y), p(Y,Z), \+p(X,Z)">
+          assert(p(X,Z))
+      </go>
+      <go if="findall(p(X,Y), p(X,Y), List)" to="f">
+          log(List)
+      </go>
+   </state>
+
+   <final id="f"/>
+
+</scxml> 
+```
 
 ## Installation
 

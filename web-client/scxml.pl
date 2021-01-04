@@ -36,7 +36,8 @@
            internal_queue/1,
            historyValue/2, 
            configuration/1,
-           states_to_invoke/1.
+           states_to_invoke/1,
+           invoked/2.
 
 
 :- debug(scxml(parse)).
@@ -239,7 +240,8 @@ clean :-
     retractall(internal_queue(_)),
     retractall(historyValue(_,_)),
     retractall(configuration(_)),
-    retractall(states_to_invoke(_)).
+    retractall(states_to_invoke(_)),
+    retractall(invoked(_, _)).
 
 % ===
 
@@ -364,17 +366,6 @@ returnDoneEvent is platform-dependent,  but if this session  is the result of  a
 another SCXML session, returnDoneEvent will cause  the event done.invoke.<id> to be placed in
 the external  event queue of  that session, where  <id> is the  id generated in  that session
 when the <invoke> was executed.
-    
-procedure exitInterpreter():
-    statesToExit = configuration.toList().sort(exitOrder)
-    for s in statesToExit:
-        for content in s.onexit.sort(documentOrder):
-            executeContent(content)
-        for inv in s.invoke:
-            cancelInvoke(inv)
-        configuration.delete(s)
-        if isFinalState(s) and isScxmlElement(s.parent):   
-            returnDoneEvent(s.donedata)
 */
 
 exit_interpreter :-
@@ -385,8 +376,7 @@ exit_interpreter :-
 exit_interpreter([]).
 exit_interpreter([State|States]) :-
     forall(onentry(State, Content), execute_content(Content)),
-%   for inv in s.invoke:
-%       cancelInvoke(inv)
+    forall(invoked(State, Pid), exit(Pid, stop)),
     configuration_delete(State),
     (   is_final(State),
         has_parent(State, Parent),
@@ -394,7 +384,7 @@ exit_interpreter([State|States]) :-
     ->  true
     ;   exit_interpreter(States)
     ).
-    
+
 
 /** select_transitions/2
 
@@ -530,7 +520,7 @@ exit_states(EnabledTransitions) :-
 process_states_to_exit([]).
 process_states_to_exit([State|States]) :-
     forall(onexit(State, Content), execute_content(Content)), 
-    % TODO: for inv in s.invoke: cancelInvoke(inv)
+    forall(invoked(State, Pid), exit(Pid, stop)),
     configuration_delete(State),
     process_states_to_exit(States).
     
@@ -761,6 +751,7 @@ invoke(State) :-
     to_be_invoked(State, pengine, Options),
     pengine_spawn(Pid, Options),
     debug(scxml(invoke), '      Invoked: pengine ~p at ~p', [Pid, State]),
+    assert(invoked(State, Pid)),
     raise(spawned(Pid)),
     fail.
 invoke(_).

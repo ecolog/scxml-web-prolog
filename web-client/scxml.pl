@@ -310,7 +310,7 @@ treats the processing of int1 as finishing up the processing of ext1.
 main_event_loop :-
     (   running
     ->  main_event_loop2
-    ;   debug(scxml(info), 'END OF PROCESSING', [])
+    ;   debug(scxml(info), '*** END OF PROCESSING ***\n', [])
     ).
     
 main_event_loop2 :-
@@ -338,7 +338,7 @@ main_event_loop(Event) :-
     (   select_transitions(Event, EnabledTransitions)
     ->  microstep(EnabledTransitions),
         main_event_loop
-    ;   debug(scxml(info), ' No match for: ~p', [Event]),
+    ;   debug(scxml(info), '    Unmatched: ~p', [Event]),
         main_event_loop
     ).
 
@@ -437,7 +437,7 @@ execute_transitions(EnabledTransitions) :-
 enter_states(EnabledTransitions) :-
     compute_entry_set(EnabledTransitions, StatesToEnter), 
     predsort(entry_order, StatesToEnter, SortedStatesToEnter), 
-    debug(scxml(info), ' Enter states: ~p', [SortedStatesToEnter]), 
+%    debug(scxml(info), ' Enter states: ~p', [SortedStatesToEnter]), 
     process_states_to_enter(SortedStatesToEnter),
     configuration(NewConfiguration),
     debug(scxml(config), 'Configuration: ~p', [NewConfiguration]).
@@ -608,12 +608,14 @@ select_transitions(Event, EnabledTransitions) :-
 select_transition(null, State, t(Ancestor, Targets, Actions)) :-
     ancestor(State, null, Ancestor),
     transition(Ancestor, '', Condition, Targets, Actions),
-    once(Condition).
+    once(Condition),
+    !.
 select_transition(Event, State, t(Ancestor, Targets, Actions)) :-
     Event \= null,
     ancestor(State, null, Ancestor),
     transition(Ancestor, Event, Condition, Targets, Actions),
-    once(Condition).   
+    once(Condition),
+    !.
 
 
 trace_transition(t(State, Targets ,_)) :-
@@ -677,7 +679,7 @@ log(Expr) :-
 script(Goal) :-
 %    debug(scxml(execute), 'About to execute ~p', [Goal]),
     call(Goal),
-    debug(scxml(execute), '     Executed: ~p', [Goal]).
+    debug(scxml(execute), '    Execution: ~p', [Goal]).
    
 
 

@@ -1,4 +1,4 @@
-:- module(scxml_parser, [
+:- module(scxml, [
     scxml_parse/1,
     interpret/1,
     run/2,

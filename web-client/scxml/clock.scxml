@@ -1,6 +1,10 @@
-<scxml datamodel="web-prolog" initial="start">
-   <parallel id="start">
-      <state id="clock">
+<!--
+   A clock - ticking once a second - and a
+   state parallel to it that is listening.
+-->
+<scxml datamodel="web-prolog" initial="Start">
+   <parallel id="Start">
+      <state id="Clock">
          <onentry>
              raise(tick)
          </onentry>
@@ -9,7 +13,7 @@
              raise(tick)
          </go>
       </state>
-      <state id="listener">
+      <state id="Listener">
          <go on="tick">
              writeln('Heard a tick!')
          </go>

@@ -7,7 +7,7 @@ Although the implemention is fairly complete, it certainly isn't ready for serio
 - The predicate `remove_conflicting_transitions/2` isn't implemented
 - In implementation is written in a very imperative, non-Prologish style
 - There are no tests
-- 
+- Isolation is not perfect. One SCXML process might conflict with another.
 
 All you can do at this point is to look at the examples and the trace when running them. The PoC comes with more than a dozen examples exercising the most important aspects of SCXML. 
 

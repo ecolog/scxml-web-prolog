@@ -2,7 +2,15 @@
 
 This is a proof-of-concept implemention showing how Prolog (Web Prolog to be more precise) can be used as a datamodel and scripting language in State Chart XML (SCXML).
 
-The implemention is more or less complete but ... 
+Although the implemention is fairly complete, it certainly isn't ready for serious use. Here is a list that things that needs to be done:
+
+- The predicate `remove_conflicting_transitions/2` isn't implemented
+- In implementation is written in a very imperative, non-Prologish style
+- There are no tests
+- 
+
+All you can do at this point is to look at the examples and the trace when running them. The PoC comes with more than a dozen examples exercising the most important aspects of SCXML. 
+
 
 ```xml
 <scxml initial="process">
@@ -32,21 +40,49 @@ The implemention is more or less complete but ...
 
 
 ```xml
-<scxml initial="s">
+<scxml initial="s" >
    <datamodel>
       p(a,b). p(b,c). p(c,d).
    </datamodel>
    <state id="s">
-      <go if="p(X,Y), p(Y,Z), \+p(X,Z)">
+      <go if="p(X,Y), p(Y,Z), \+p(X,Z)" >
           assert(p(X,Z))
       </go>
-      <go if="findall(p(X,Y), p(X,Y), List)" to="f">
+      <go if="findall(p(X,Y), p(X,Y), List)" to="f" >
           log(List)
       </go>
    </state>
-   <final id="f"/>
+   <final id="f" />
 </scxml> 
 ```
+
+```text
+*** Processing file 'scxml/history.scxml'
+Configuration: [process,s1]
+   Ext. event: e1
+   Transition: s1 => [s2]
+Configuration: [process,s2]
+   Ext. event: e2
+   Transition: s2 => [s1]
+Configuration: [process,s1]
+   Ext. event: e1
+   Transition: s1 => [s2]
+Configuration: [process,s2]
+   Ext. event: pause
+   Transition: process => [interrupted]
+Configuration: [interrupted]
+   Ext. event: resume
+   Transition: interrupted => [h]
+Configuration: [process,s2]
+   Ext. event: terminate
+   Transition: process => [terminated]
+Configuration: [terminated]
+*** End of processing (a down message was sent to parent)
+
+```
+
+
+
 
 ## Installation
 

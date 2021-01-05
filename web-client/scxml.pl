@@ -467,16 +467,17 @@ remove_conflicting_transitions(Transitions0, Transitions) :-
  
 /** microstep/1
 
-The purpose of the  microstep procedure is to process a single set  of transitions. These may
-have been enabled by  an external event, an internal event, or by  the presence or absence of
-certain values in the data model at the  current point in time. The processing of the enabled
-transitions must  be done in  parallel ('lock  step') in the  sense that their  source states
-must first be  exited, then their actions  must be executed, and finally  their target states
-entered.If  a single  atomic state  is active,  then enabledTransitions  will contain  only a  single
-transition. If  multiple states are active  (i.e., we are  in a parallel region),  then there
-may be multiple transitions,  one per active atomic state (though some  states may not select
-a transition.) In  this case, the transitions are  taken in the document order  of the atomic
-states that selected them.
+The purpose of the microstep procedure is to  process a single set of transitions. These may
+have been enabled by an external event, an  internal event, or by the presence or absence of
+certain  values in  the data  model at  the current  point in  time. The  processing of  the
+enabled transitions must  be done in parallel  ('lock step') in the sense  that their source
+states must first be  exited, then their actions must be executed,  and finally their target
+states entered.  If a single  atomic state is  active, then enabledTransitions  will contain
+only  a single  transition.  If multiple  states  are active  (i.e., we  are  in a  parallel
+region), then there  may be multiple transitions,  one per active atomic  state (though some
+states  may not  select  a transition.)  In  this case,  the transitions  are  taken in  the
+document order of the atomic states that selected them.
+
 */
 
 microstep(EnabledTransitions) :-

@@ -39,25 +39,8 @@ All you can do at this point is to look at the examples and the trace when runni
 ```
 
 
-```xml
-<scxml initial="s" >
-   <datamodel>
-      p(a,b). p(b,c). p(c,d).
-   </datamodel>
-   <state id="s">
-      <go if="p(X,Y), p(Y,Z), \+p(X,Z)" >
-          assert(p(X,Z))
-      </go>
-      <go if="findall(p(X,Y), p(X,Y), List)" to="f" >
-          log(List)
-      </go>
-   </state>
-   <final id="f" />
-</scxml> 
-```
-
 ```text
-*** Processing file 'scxml/history.scxml'
+*** Processing file 'scxml/pause-and-resume.scxml'
 Configuration: [process,s1]
    Ext. event: e1
    Transition: s1 => [s2]

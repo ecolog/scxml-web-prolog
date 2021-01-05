@@ -883,6 +883,10 @@ cancel(ID) :-
     exit(ID, cancel).
 
 
+in(State) :-
+    configuration(Configuration),
+    memberchk(State, Configuration).
+
 
 log(Expr) :-
     write(Expr), nl,

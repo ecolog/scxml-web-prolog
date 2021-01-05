@@ -1,61 +1,64 @@
+<!--
+   A simple conversational agent written in a form-based style.
+-->
 <scxml initial="form">
-  <state id="form" initial="selectFormItem">
-      <datamodel>
-          :- dynamic 
-               welcome/1,
-               color/1,
-               size/1.
-      </datamodel>
-      <state id="selectFormItem">
-        <go to="Welcome" if="\+ welcome(_)"/>
-        <go to="Color"   if="\+ color(_)"/>
-        <go to="Size"    if="\+ size(_)"/>
-        <go to="Respond"/>
-      </state>
-      <state id="Welcome">
-        <onentry>
-          log('Welcome to the box shop!'),
-          assert(welcome(true))
-        </onentry>
-        <go to="selectFormItem"/>
-      </state>
-      <state id="Color">
-        <onentry>
-          log('What color do you want?'),
-          self(Self),
-          send(Self, timeout, [delay(10), id(a)])
-        </onentry>
-        <onexit>
-          cancel(a)
-        </onexit>
-        <go to="selectFormItem" on="says(color(Color))">
-          assert(color(Color))
+    <state id="form" initial="selectFormItem">
+        <datamodel>
+            :- dynamic 
+                welcome/1,
+                color/1,
+                size/1.
+        </datamodel>
+        <state id="selectFormItem">
+            <go to="Welcome" if="\+ welcome(_)"/>
+            <go to="Color"   if="\+ color(_)"/>
+            <go to="Size"    if="\+ size(_)"/>
+            <go to="Respond"/>
+        </state>
+        <state id="Welcome">
+            <onentry>
+                log('Welcome to the box shop!'),
+                assert(welcome(true))
+            </onentry>
+            <go to="selectFormItem"/>
+        </state>
+        <state id="Color">
+            <onentry>
+                log('What color do you want?'),
+                self(Self),
+                send(Self, timeout, [delay(10), id(a)])
+            </onentry>
+            <onexit>
+                cancel(a)
+            </onexit>
+            <go to="selectFormItem" on="says(color(Color))">
+                assert(color(Color))
+            </go>
+        </state>
+        <state id="Size">
+            <onentry>
+                log('What size do you want?'),
+                self(Self),
+                send(Self, timeout, [delay(10), id(a)])
+            </onentry>
+            <onexit>
+                cancel(b)
+            </onexit>
+            <go to="selectFormItem" on="says(size(Size))">
+                assert(size(Size))
+            </go>
+        </state>
+        <go to="selectFormItem" on="says(_)">
+            log('I did not understand.')
         </go>
-      </state>
-      <state id="Size">
-        <onentry>
-          log('What size do you want?'),
-          self(Self),
-          send(Self, timeout, [delay(10), id(a)])
-        </onentry>
-        <onexit>
-          cancel(b)
-        </onexit>
-        <go to="selectFormItem" on="says(size(Size))">
-          assert(size(Size))
+        <go to="selectFormItem" on="timeout">
+            log('I did not hear you.')
         </go>
-      </state>
-      <go to="selectFormItem" on="says(_)">
-        log('I did not understand.')
-      </go>
-      <go to="selectFormItem" on="timeout">
-        log('I did not hear you.')
-      </go>
-  </state>
-  <final id="Respond">
-    <onentry>
-      size(Size), color(Color),
-      format('You want a ~p ~p box!\n', [Size, Color])
-    </onentry>
-  </final>
+    </state>
+    <final id="Respond">
+        <onentry>
+            size(Size), color(Color),
+            format('You want a ~p ~p box!\n', [Size, Color])
+        </onentry>
+    </final>
 </scxml>

@@ -3,20 +3,20 @@
    state parallel to it that is listening.
 -->
 <scxml datamodel="web-prolog" initial="Start">
-   <parallel id="Start">
-      <state id="Clock">
-         <onentry>
-             raise(tick)
-         </onentry>
-         <go on="tick">
-             sleep(1),
-             raise(tick)
-         </go>
-      </state>
-      <state id="Listener">
-         <go on="tick">
-             writeln('Heard a tick!')
-         </go>
-      </state>
-   </parallel>
+    <parallel id="Start">
+        <state id="Clock">
+            <onentry>
+                raise(tick)
+            </onentry>
+            <go on="tick">
+                sleep(1),
+                raise(tick)
+            </go>
+        </state>
+        <state id="Listener">
+            <go on="tick">
+                writeln('Heard a tick!')
+            </go>
+        </state>
+    </parallel>
 </scxml>

@@ -1,23 +1,23 @@
 <scxml datamodel="web-prolog" initial="s">
-   <datamodel>
-   
-      s(Sem) --> np(X), vp(X^Sem).
+    <datamodel>
 
-      np(Sem) --> pn(Sem).
+        s(Sem) --> np(X), vp(X^Sem).
 
-      vp(Sem) --> iv(Sem).
-      vp(Sem) --> tv(X^Sem), np(X).
+        np(Sem) --> pn(Sem).
 
-      pn(l) --> [lassie].
-      pn(g) --> [garfield].
- 
-      iv(X^sleep(X)) --> [slept].
-      tv(Y^X^chase(X,Y)) --> [chased]. 
-   
-   </datamodel>
-   <state id="s">
-      <go on="input(Input)" if="s(Sem,Input,[])">
-        writeln(Sem)
-      </go>
-   </state>
+        vp(Sem) --> iv(Sem).
+        vp(Sem) --> tv(X^Sem), np(X).
+
+        pn(l) --> [lassie].
+        pn(g) --> [garfield].
+
+        iv(X^sleep(X)) --> [slept].
+        tv(Y^X^chase(X,Y)) --> [chased]. 
+    
+    </datamodel>
+    <state id="s">
+        <go on="input(Input)" if="s(Sem,Input,[])">
+            writeln(Sem)
+        </go>
+    </state>
 </scxml>

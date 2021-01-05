@@ -1,23 +1,23 @@
 <scxml datamodel="web-prolog" initial="spawn-ask-collect">
-   <state id="spawn-ask-collect" initial="ask">
-      <invoke type="pengine" exit="false">
-         q(X) :- p(X).
-         p(a). p(b). p(c). p(d).
-      </invoke>
-      <state id="ask">
-         <go to="collect" on="spawned(Pid)">
-             pengine_ask(Pid, q(X))
-         </go>
-      </state>
-      <state id="collect">
-         <go to="collect" on="success(Pid,Data,true)">
-             writeln(Data),
-             pengine_next(Pid)
-         </go>
-         <go to="f" on="success(_,Data,false)">
-             writeln(Data)
-         </go>
-      </state>
-   </state>
-   <final id="f" />
+    <state id="spawn-ask-collect" initial="ask">
+        <invoke type="pengine" exit="false">
+            q(X) :- p(X).
+            p(a). p(b). p(c). p(d).
+        </invoke>
+        <state id="ask">
+            <go to="collect" on="spawned(Pid)">
+                pengine_ask(Pid, q(X))
+            </go>
+        </state>
+        <state id="collect">
+            <go to="collect" on="success(Pid,Data,true)">
+                writeln(Data),
+                pengine_next(Pid)
+            </go>
+            <go to="f" on="success(_,Data,false)">
+                writeln(Data)
+            </go>
+        </state>
+    </state>
+    <final id="f" />
 </scxml>

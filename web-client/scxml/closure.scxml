@@ -1,16 +1,16 @@
 <scxml initial="s">
-   <datamodel>
-      p(a,b). 
-      p(b,c). 
-      p(c,d).
-   </datamodel>
-   <state id="s">
-      <go if="p(X,Y), p(Y,Z), \+p(X,Z)">
-          assert(p(X,Z))
-      </go>
-      <go if="findall(p(X,Y), p(X,Y), List)" to="f">
-          log(List)
-      </go>
-   </state>
-   <final id="f"/>
+    <datamodel>
+        p(a,b). 
+        p(b,c). 
+        p(c,d).
+    </datamodel>
+    <state id="s">
+        <go if="p(X,Y), p(Y,Z), \+p(X,Z)">
+            assert(p(X,Z))
+        </go>
+        <go if="findall(p(X,Y), p(X,Y), List)" to="f">
+            log(List)
+        </go>
+    </state>
+    <final id="f"/>
 </scxml> 

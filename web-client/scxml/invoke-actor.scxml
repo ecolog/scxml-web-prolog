@@ -1,30 +1,30 @@
 <scxml datamodel="web-prolog" initial="Pingpong">
-   <state id="Pingpong" initial="Init">
-      <invoke type="actor" goal="ponger">
-         ponger :-
-             receive({
-                 ping(Pid) ->
-                     sleep(1),
-                     Pid ! pong,
-                     ponger
-             }).
-      </invoke>
-      <state id="Init">
-         <go to="Pinger" on="spawned(Pid)">
-             register(ponger, Pid)
-         </go>
-      </state>
-      <state id="Pinger">
-         <onentry>
-             self(Self),
-		     ponger ! ping(Self)
-         </onentry>
-         <go on="pong">
-             log('Received Pong'),
-             sleep(1),
-             self(Self),
-		     ponger ! ping(Self)
-         </go>
-      </state>
-   </state>
+    <state id="Pingpong" initial="Init">
+        <invoke type="actor" goal="ponger">
+            ponger :-
+                receive({
+                    ping(Pid) ->
+                        sleep(1),
+                        Pid ! pong,
+                        ponger
+                 }).
+        </invoke>
+        <state id="Init">
+            <go to="Pinger" on="spawned(Pid)">
+                register(ponger, Pid)
+            </go>
+        </state>
+        <state id="Pinger">
+            <onentry>
+                self(Self),
+                ponger ! ping(Self)
+            </onentry>
+            <go on="pong">
+                log('Received Pong'),
+                sleep(1),
+                self(Self),
+                ponger ! ping(Self)
+            </go>
+        </state>
+    </state>
 </scxml>

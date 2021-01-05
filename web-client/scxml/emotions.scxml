@@ -1,34 +1,34 @@
 <!--
-   An agent controller for emotions and behavior.
-   See https://github.com/torbjornlager/scxml-web-prolog/raw/main/img/emotions.jpg
+    An agent controller for emotions and behavior.
+    See https://github.com/torbjornlager/scxml-web-prolog/raw/main/img/emotions.jpg
 -->
 <scxml initial="agent">
-   <parallel id="agent">
-      <parallel id="emotions">
-         <state id="AF-dimension" initial="anger">
-            <state id="anger">
-               <go to="fear" on="e"/>
+    <parallel id="agent">
+        <parallel id="emotions">
+            <state id="AF-dimension" initial="anger">
+                <state id="anger">
+                    <go to="fear" on="e"/>
+                </state>
+                <state id="fear">
+                    <go to="anger" on="d"/>
+                </state>
             </state>
-            <state id="fear">
-               <go to="anger" on="d"/>
+            <state id="AS-dimension" initial="anticipation">
+                <state id="anticipation">
+                    <go to="surprise" on="e"/>
+                </state>
+                <state id="surprise">
+                    <go to="anticipation" on="f"/>
+                </state>
             </state>
-         </state>
-         <state id="AS-dimension" initial="anticipation">
-            <state id="anticipation">
-               <go to="surprise" on="e"/>
+        </parallel>
+        <state id="behavior" initial="attacking">
+            <state id="attacking">
+                <go to="fleeing" on="e"/>
             </state>
-            <state id="surprise">
-               <go to="anticipation" on="f"/>
+            <state id="fleeing">
+                <go to="attacking" on="d"/>
             </state>
-         </state>
-      </parallel>
-      <state id="behavior" initial="attacking">
-         <state id="attacking">
-            <go to="fleeing" on="e"/>
-         </state>
-         <state id="fleeing">
-            <go to="attacking" on="d"/>
-         </state>
-      </state>
-   </parallel>
+        </state>
+    </parallel>
 </scxml>

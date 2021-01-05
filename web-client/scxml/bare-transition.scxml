@@ -1,9 +1,13 @@
+<!--
+   A clock - ticking once a second - and a
+   state parallel to it that is listening.
+-->
 <scxml datamodel="web-prolog" initial="s">
-   <state id="s">
-      <go>
-          sleep(1), 
-          log(hello)
-      </go>
-   </state>
+    <state id="s">
+        <go>
+            sleep(1), 
+            log(hello)
+        </go>
+    </state>
 </scxml>
 

@@ -2,7 +2,7 @@
    <state id="s">
       <go>
           sleep(1), 
-          writeln(hello)
+          log(hello)
       </go>
    </state>
 </scxml>

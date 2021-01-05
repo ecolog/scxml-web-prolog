@@ -888,9 +888,8 @@ in(State) :-
     memberchk(State, Configuration).
 
 
-log(Expr) :-
-    write(Expr), nl,
-    flush_output.
+log(Message) :-
+    debug(scxml(execute), '   Output log: ~p', [Message]).
 
 
 script(Goal) :-

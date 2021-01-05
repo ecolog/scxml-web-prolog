@@ -1,22 +1,22 @@
 <!--
    Two parallel states playing pingpong.
-   Pinger is serving.
+   Pinger has the serve.
 -->
-<scxml initial="start">
+<scxml initial="Start">
    <parallel id="Start">
       <state id="Pinger">
          <onentry>
 		     raise(ping)
          </onentry>
          <go on="ping">
-             writeln('Ping'),
+             log('Ping'),
              sleep(1),
 			 raise(pong)
          </go>
       </state>
       <state id="Ponger">
          <go on="pong">
-             writeln('Pong'),
+             log('Pong'),
              sleep(1),
              raise(ping)
          </go>

@@ -1,6 +1,6 @@
 <!--
    Spaghetti SCXML.
-   See 
+   See https://github.com/torbjornlager/scxml-web-prolog/raw/main/img/spaghetti.jpg
 -->
 <scxml initial="s0">
    <state id="s0">

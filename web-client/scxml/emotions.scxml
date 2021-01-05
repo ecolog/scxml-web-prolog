@@ -1,3 +1,7 @@
+<!--
+   An agent controller for emotions and behavior.
+   See https://github.com/torbjornlager/scxml-web-prolog/raw/main/img/emotions.jpg
+-->
 <scxml initial="agent">
    <parallel id="agent">
       <parallel id="emotions">

@@ -12,6 +12,7 @@ Although the implemention is fairly complete, it certainly isn't ready for serio
 
 All you can do at this point is to look at the examples and the trace when running them. The PoC comes with more than a dozen examples exercising the most important aspects of SCXML. 
 
+- [Spaghetti](https://github.com/torbjornlager/scxml-web-prolog/raw/main/web-client/spaghetti.scxml)
 
 ```xml
 <scxml initial="process">

@@ -1,5 +1,5 @@
-<scxml datamodel="web-prolog" initial="pingpong">
-   <state id="pingpong" initial="Init">
+<scxml datamodel="web-prolog" initial="Pingpong">
+   <state id="Pingpong" initial="Init">
       <invoke type="actor" goal="ponger">
          ponger :-
              receive({

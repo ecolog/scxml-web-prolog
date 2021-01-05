@@ -1,12 +1,11 @@
 <scxml initial="form">
   <state id="form" initial="selectFormItem">
-    <datamodel>
-      :- dynamic 
-           welcome/1,
-           color/1,
-           size/1.
-    </datamodel>
-
+      <datamodel>
+          :- dynamic 
+               welcome/1,
+               color/1,
+               size/1.
+      </datamodel>
       <state id="selectFormItem">
         <go to="Welcome" if="\+ welcome(_)"/>
         <go to="Color"   if="\+ color(_)"/>
@@ -15,16 +14,16 @@
       </state>
       <state id="Welcome">
         <onentry>
-          writeln('Welcome to the box shop!'),
+          log('Welcome to the box shop!'),
           assert(welcome(true))
         </onentry>
         <go to="selectFormItem"/>
       </state>
       <state id="Color">
         <onentry>
-          writeln('What color do you want?'),
+          log('What color do you want?'),
           self(Self),
-          snd(Self, timeout, [delay(5), id(a)])
+          send(Self, timeout, [delay(10), id(a)])
         </onentry>
         <onexit>
           cancel(a)
@@ -35,9 +34,9 @@
       </state>
       <state id="Size">
         <onentry>
-          writeln('What size do you want?'),
+          log('What size do you want?'),
           self(Self),
-          snd(Self, timeout, [delay(5), id(a)])
+          send(Self, timeout, [delay(10), id(a)])
         </onentry>
         <onexit>
           cancel(b)
@@ -46,21 +45,17 @@
           assert(size(Size))
         </go>
       </state>
-      <state id="Respond">
-        <onentry>
-          size(Size), color(Color),
-          format('You want a ~p ~p box!\n', [Size, Color]),
-          retractall(color(_)),
-          retractall(size(_))
-        </onentry>
-      </state>
       <go to="selectFormItem" on="says(_)">
-        writeln('I did not understand.')
+        log('I did not understand.')
       </go>
       <go to="selectFormItem" on="timeout">
-        writeln('I did not hear you.')
+        log('I did not hear you.')
       </go>
   </state>
-  <go to="end" on="end"/>
-  <final id="end"/>
+  <final id="Respond">
+    <onentry>
+      size(Size), color(Color),
+      format('You want a ~p ~p box!\n', [Size, Color])
+    </onentry>
+  </final>
 </scxml>

@@ -1,7 +1,7 @@
 :- module(scxml, [
     scxml_parse/1,
     interpret/1,
-    snd/3,
+    send/3,
     run/2,
     list/0,
     clean/0
@@ -47,6 +47,7 @@
 :- debug(scxml(execute)).
 :- debug(scxml(invoke)).
 :- debug(scxml(info)).
+:- debug(scxml(log)).
 
 :- nodebug(http(_)).
 
@@ -755,6 +756,14 @@ invoke(State) :-
     assert(invoked(State, Pid)),
     raise(spawned(Pid)),
     fail.
+invoke(State) :-
+    to_be_invoked(State, actor, Options),
+    option(goal(Goal), Options),
+    spawn(Goal, Pid, Options),
+    debug(scxml(invoke), '      Invoked: actor ~p at ~p', [Pid, State]),
+    assert(invoked(State, Pid)),
+    raise(spawned(Pid)),
+    fail.
 invoke(_).
 
 
@@ -862,9 +871,8 @@ enqueue_internal_event(Event) :-
 raise(Event) :-
     enqueue_internal_event(Event).
 
-
-
-snd(Pid, Message, Options) :-
+    
+send(Pid, Message, Options) :-
     option(delay(Delay), Options, 0),
     thread_create(send_after(Pid, Message, Delay), CancelPid, []),
     (   option(id(ID), Options)
@@ -875,8 +883,7 @@ snd(Pid, Message, Options) :-
 send_after(Parent, Message, Delay) :-
     receive({
        after(Delay) -> 
-           Parent ! Message,
-           debug(scxml(info), '   Sent: ~p', [Message])
+           Parent ! Message
     }).       
 
 cancel(ID) :-
@@ -889,7 +896,7 @@ in(State) :-
 
 
 log(Message) :-
-    debug(scxml(execute), '   Output log: ~p', [Message]).
+    debug(scxml(log), '   Output log: ~p', [Message]).
 
 
 script(Goal) :-

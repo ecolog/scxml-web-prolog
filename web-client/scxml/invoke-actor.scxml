@@ -1,0 +1,35 @@
+<scxml datamodel="web-prolog" initial="pingpong">
+   <datamodel>
+       :- dynamic pid/1.
+   </datamodel>   
+   <state id="pingpong" initial="Init">
+      <invoke type="actor" goal="ponger">
+         ponger :-
+             receive({
+                 ping(Pid) ->
+                     sleep(1),
+                     Pid ! pong,
+                     ponger
+             }).
+      </invoke>
+      <state id="Init">
+         <go to="Pinger" on="spawned(Pid)">
+             assert(pid(Pid))
+         </go>
+      </state>
+      <state id="Pinger">
+         <onentry>
+             pid(Pid),
+             self(Self),
+		     Pid ! ping(Self)
+         </onentry>
+         <go on="pong">
+             log('Received Pong'),
+             sleep(1),
+             pid(Pid),
+             self(Self),
+		     Pid ! ping(Self)
+         </go>
+      </state>
+   </state>
+</scxml>

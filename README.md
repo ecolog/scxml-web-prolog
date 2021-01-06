@@ -38,7 +38,7 @@ $ swipl run.pl
 
 The **Prolog debug monitor** should now appear. (It may take a while the first time.)
 
-Let's run two example processes, with [scxml/pause-and-resume.scxml](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml/pause-and-resume.scxml) and [scxml/pingpong.scxml](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml/pingpong.scxml). At the Prolog prompter (`?-`), do:
+Let's run two example processes, with [scxml/pause-and-resume.scxml](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml/pause-and-resume.scxml) and [scxml/pingpong.scxml](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml/pingpong.scxml). At the Prolog prompter, do:
 
 ```prolog
 ?- run('scxml/pause-and-resume.scxml', Pid).

@@ -2,6 +2,7 @@
     scxml_parse/1,
     interpret/1,
     send/3,
+    run/1,
     run/2,
     list/0,
     clean/0
@@ -246,13 +247,69 @@ clean :-
 
 % ===
 
-
+run(File) :-
+    run(File, Pid),
+    mytrace(Pid).
 
 run(File, Pid) :-
     debug(scxml(info), '*** Processing file ~p', [File]),
     spawn(interpret(File), Pid, [
         monitor(true)
     ]).
+
+/** mytrace/1
+    
+A simple tracing facility. Needs more work!
+*/
+
+mytrace(Pid) :-
+    sleep(0.1),
+    configuration(Configuration),
+    findall(Event-Transition, (
+        member(State, Configuration),
+        is_atomic(State),
+        select_transition(Event, State, Transition)
+    ), Transitions),
+    (   nth1(N, Transitions, E-t(S0,Ss,_)),
+        format('~p: ~p (go from ~p to ~p)\n', [N, E, S0, Ss]),
+        fail
+    ;   format('g: (call a goal)\n', []),
+        format('m: (list model)\n', []),
+        format('a: (abort)\n', [])
+    ),
+    write('> '),
+    get_single_char(Code),
+    name(Atom, [Code]),
+    writeln(Atom),
+    (   Code >= 49, Code =< 57,
+        number_codes(N, [Code])
+    ->  nth1(N, Transitions, Event-_),
+        Pid ! Event,
+        mytrace(Pid)
+    ;   atom_codes(A, [Code]),
+        (   A == g
+        ->  write('Goal: '),
+            read(Goal),
+            get_single_char(10), % Get rid of \n
+            (   catch(once(Goal), Error, true)
+            ->  (   var(Error)
+                ->  sleep(0.1),
+                    mytrace(Pid)
+                ;   print_message(error, Error),
+                    mytrace(Pid)
+                )
+            ;   format('Goal failed.\n', [Goal])
+            )
+        ;   A == m
+        ->  list,
+            mytrace(Pid)
+        ;   A == a
+        ->  exit(Pid, stop),
+            flush
+        ;   format('Unrecognized command: ~p\n', [A]),
+            mytrace(Pid)            
+        )
+    ).
 
 
 /** interpret/1
@@ -353,8 +410,7 @@ main_event_loop(Event) :-
         main_event_loop
     ;   debug(scxml(info), '    Unmatched: ~p', [Event]),
         main_event_loop
-    ).
-
+    ).    
 
 /** exit_interpreter/1
     
@@ -404,28 +460,25 @@ selected, filter out any preempted transitions and return the resulting set.
    
 select_transitions(Event, EnabledTransitions) :-
     configuration(Configuration), 
-    findall(EnabledTransition,
-           (	member(State, Configuration),
-           		is_atomic(State),
-           		select_transition(Event, State, EnabledTransition)   
-		   ),
-    EnabledTransitions0),
+    findall(EnabledTransition, (	
+        member(State, Configuration),
+        is_atomic(State),
+        once(select_transition(Event, State, EnabledTransition))   
+    ), EnabledTransitions0),
     EnabledTransitions0 \= [],
     list_to_ord_set(EnabledTransitions0, EnabledTransitions1),
     remove_conflicting_transitions(EnabledTransitions1, EnabledTransitions),
     maplist(trace_transition, EnabledTransitions). 
-        
+
 select_transition(null, State, t(Ancestor, Targets, Actions)) :-
     ancestor(State, null, Ancestor),
     transition(Ancestor, '', Condition, Targets, Actions),
-    once(Condition),
-    !.
+    once(Condition).
 select_transition(Event, State, t(Ancestor, Targets, Actions)) :-
-    Event \= null,
+    Event \== null,
     ancestor(State, null, Ancestor),
     transition(Ancestor, Event, Condition, Targets, Actions),
-    once(Condition),
-    !.
+    once(Condition).  
     
     
 /** remove_conflicting_transitions/2    
@@ -537,12 +590,13 @@ the configuration that are descendants of the domain.
 */    
 
 compute_exit_set(Transitions, Configuration, StatesToExit) :-
-    findall(State, (member(t(Source, Targets, _), Transitions), 
-                   Targets \= [], 
-                   find_LCCA([Source|Targets], LCA), 
-                   member(State, Configuration), 
-                   is_descendant(State, LCA)), 
-           StatesToExit).
+    findall(State, (
+        member(t(Source, Targets, _), Transitions), 
+        Targets \= [], 
+        find_LCCA([Source|Targets], LCA), 
+        member(State, Configuration), 
+        is_descendant(State, LCA)
+    ), StatesToExit).
 
      
 /** execute_transition_content/1
@@ -618,22 +672,22 @@ transition. (Ancestors outside of the domain of the transition will not have bee
 */
     
 compute_entry_set(Transitions, StatesToEnter) :-
-    findall(StateToEnter, 
-            (member(t(Source, Targets, _), Transitions), 
-             Targets \= [], 
-             find_LCCA([Source|Targets], LCA), 
-             member(State, Targets), 
-             (  is_history(State)
-             ->  (   historyValue(State, States)
-                 ->  member(HS, States), 
-                     state_to_enter(HS, LCA, StateToEnter)
-                 ;   transition(State, '', true, States, _), 
-                     member(HS, States), 
-                     state_to_enter(HS, LCA, StateToEnter)
-                 )
-             ;   state_to_enter(State, LCA, StateToEnter)
-             )),  
-          StatesToEnter).
+    findall(StateToEnter, (
+        member(t(Source, Targets, _), Transitions), 
+        Targets \= [], 
+        find_LCCA([Source|Targets], LCA), 
+        member(State, Targets), 
+        (  is_history(State)
+        ->  (   historyValue(State, States)
+            ->  member(HS, States), 
+                state_to_enter(HS, LCA, StateToEnter)
+            ;   transition(State, '', true, States, _), 
+                member(HS, States), 
+                state_to_enter(HS, LCA, StateToEnter)
+            )
+        ;   state_to_enter(State, LCA, StateToEnter)
+        )
+    ), StatesToEnter).
 
 
 /** state_to_enter/3

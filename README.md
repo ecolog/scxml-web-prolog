@@ -1,6 +1,6 @@
 # SCXML + Web Prolog
 
-This is a proof-of-concept implemention showing how Prolog ([Web Prolog](https://gup.ub.gu.se/file/207827) to be more precise) can be used as a datamodel and scripting language in a (slightly modified dialect) of [State Chart XML](https://en.wikipedia.org/wiki/SCXML) (SCXML).
+This is a proof-of-concept implemention showing how Prolog ([Web Prolog](https://gup.ub.gu.se/file/207827) to be more precise) can be used as a datamodel and scripting language in (a slightly modified dialect of) [State Chart XML](https://en.wikipedia.org/wiki/SCXML) (SCXML).
 
 Although the implemention is fairly complete (see [web-client/scxml.pl](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml.pl)), it certainly isn't ready for serious use. After all, it's just a PoC. Here is a list of issues:
 

@@ -17,7 +17,6 @@
 :- use_module(library(debug)).
 
 :- prolog_ide(debug_monitor).
-%:- prolog_ide(thread_monitor).
 
 	
 % Model               
@@ -328,7 +327,6 @@ true and start the interpreter's event loop.
 interpret(File) :-
     clean,
     scxml_parse(File),
-%    debug(scxml(model), '~@', [list]),
     assert(configuration([])), 
     assert(states_to_invoke([])), 
     assert(running),
@@ -337,8 +335,6 @@ interpret(File) :-
     message_queue_create(Internal), 
     assert(internal_queue(Internal)),
     enter_states([t(dummy, [Initial], [])]),
-%    configuration(Configuration),
-%    debug(scxml(config), 'Configuration: ~p', [Configuration]),
     main_event_loop.
 
 
@@ -412,8 +408,6 @@ main_event_loop(Event) :-
     ).    
 
 /** exit_interpreter/1
-    
-NOT YET IMPLEMENTED!
     
 The purpose  of this procedure  is to exit  the current SCXML  process by exiting  all active
 states. If the machine  is in a top-level final state, a Done  event is generated. (Note that

@@ -12,7 +12,7 @@ Although the implemention is fairly complete, it certainly isn't ready for serio
 
 What you can do at this point is to look at the examples, run them, and inspect the trace. The PoC comes with more than a dozen examples exercising the most important aspects of SCXML + Web Prolog. The examples can be found in [scxml-web-prolog/web-client/scxml/](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml).
 
-
+Contributions of more examples are most welcome!
 
 ## Installing and running
 

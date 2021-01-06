@@ -36,11 +36,11 @@ $ cd web-client
 $ swipl run.pl
 ```
 
-The debug monitor should now appear. (It may take a while the first time.)
+The **Prolog debug monitor** should now appear. (It may take a while the first time.)
 
 Let's run two example processes, with [scxml/pause-and-resume.scxml](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml/pause-and-resume.scxml) and [scxml/pingpong.scxml](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml/pingpong.scxml). At the Prolog prompter (`?-`), do:
 
-```text
+```prolog
 ?- run('scxml/pause-and-resume.scxml', Pid).
 Pid = '10099674'.
 
@@ -86,6 +86,6 @@ Here's what the debug monitor should now show:
 
 ![Alt text](img/debug-monitor.jpg?raw=true "The Prolog debug monitor")
 
-Success!!!
+Success running the other examples!
 
-
+And as I said, contributions of additional examples are of course most welcome!

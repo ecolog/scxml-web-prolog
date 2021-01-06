@@ -2,7 +2,7 @@
 
 This is a proof-of-concept implemention showing how Prolog (Web Prolog to be more precise) can be used as a datamodel and scripting language in State Chart XML (SCXML).
 
-Although the implemention is fairly complete (see [web-client/scxml.pl](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml.pl)), it certainly isn't ready for serious use. After all, it's just a PoC. Here is a list that things that needs to be done:
+Although the implemention is fairly complete (see [web-client/scxml.pl](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml.pl)), it certainly isn't ready for serious use. After all, it's just a PoC. Here is a list of issues:
 
 - In implementation is written in a very imperative, non-Prologish style. Should be rewritten to avoid as many globals as possible.
 - The predicate `remove_conflicting_transitions/2` is not yet implemented.
@@ -10,9 +10,9 @@ Although the implemention is fairly complete (see [web-client/scxml.pl](https://
 - There's very little error handling.
 - There are examples, but no real unit tests.
 
-What you can do at this point is to look at the examples, run them, and inspect the trace. The PoC comes with more than a dozen examples exercising the most important aspects of SCXML + Web Prolog. The examples can be found in [scxml-web-prolog/web-client/scxml/](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml).
+What you can do at this point is to look at the examples, run them, and inspect the traces. The PoC comes with more than a dozen examples exercising the most important aspects of SCXML + Web Prolog. They can be found in [scxml-web-prolog/web-client/scxml/](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml).
 
-Contributions of more examples are most welcome!
+Contributions of additional examples are of course most welcome!
 
 ## Installing and running
 

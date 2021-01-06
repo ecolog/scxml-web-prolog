@@ -28,12 +28,12 @@
                 self(Self),
                 send(Self, timeout, [delay(10), id(a)])
             </onentry>
-            <onexit>
-                cancel(a)
-            </onexit>
             <go to="selectFormItem" on="says(color(Color))">
                 assert(color(Color))
             </go>
+            <onexit>
+                cancel(a)
+            </onexit>
         </state>
         <state id="Size">
             <onentry>
@@ -41,12 +41,12 @@
                 self(Self),
                 send(Self, timeout, [delay(10), id(a)])
             </onentry>
-            <onexit>
-                cancel(b)
-            </onexit>
             <go to="selectFormItem" on="says(size(Size))">
                 assert(size(Size))
             </go>
+            <onexit>
+                cancel(b)
+            </onexit>
         </state>
         <go to="selectFormItem" on="says(_)">
             log('I did not understand.')

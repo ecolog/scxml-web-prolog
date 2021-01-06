@@ -10,7 +10,7 @@ Although the implemention is fairly complete (see [web-client/scxml.pl](https://
 - There's very little error handling.
 - There are examples, but no real unit tests.
 
-What you can do at this point is to look at the examples, run them, and inspect the traces. The PoC comes with more than a dozen examples exercising the most important aspects of SCXML + Web Prolog. Features such as hierarchy, history states, parallelism, broadcast communication, process invocation, inter-process communication, and (of course the use of Web Prolog as a datamodel and scripting language, are all represented in one or more examples.
+What you can do at this point is to look at the examples, run them, and inspect the traces. The PoC comes with more than a dozen examples exercising the most important aspects of SCXML + Web Prolog. Features such as hierarchy, history states, parallelism, broadcast communication, process invocation, inter-process communication, and (of course!) the use of Web Prolog as a datamodel and scripting language, are all represented in one or more examples.
 
 The examples can be found in [scxml-web-prolog/web-client/scxml/](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml). Contributions of additional ones are of course most welcome!
 

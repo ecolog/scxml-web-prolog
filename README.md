@@ -6,63 +6,86 @@ Although the implemention is fairly complete, it certainly isn't ready for serio
 
 - In implementation is written in a very imperative, non-Prologish style
 - The predicate `remove_conflicting_transitions/2` is not yet implemented
-- There's very little error handling
-- There are no tests
 - Isolation is not perfect. One SCXML process might conflict with another.
+- There's very little error handling
+- There are examples, but no real unit tests
 
-All you can do at this point is to look at the examples and the trace when running them. The PoC comes with more than a dozen examples exercising the most important aspects of SCXML. 
-
-The SCXML example documents can be found in [scxml-web-prolog/web-client/scxml/](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml).
-
-
-
-```text
-*** Processing file 'scxml/pause-and-resume.scxml'
-Configuration: [process,s1]
-   Ext. event: e1
-   Transition: s1 => [s2]
-Configuration: [process,s2]
-   Ext. event: e2
-   Transition: s2 => [s1]
-Configuration: [process,s1]
-   Ext. event: e1
-   Transition: s1 => [s2]
-Configuration: [process,s2]
-   Ext. event: pause
-   Transition: process => [interrupted]
-Configuration: [interrupted]
-   Ext. event: resume
-   Transition: interrupted => [h]
-Configuration: [process,s2]
-   Ext. event: terminate
-   Transition: process => [terminated]
-Configuration: [terminated]
-*** End of processing (a down message was sent to parent)
-
-```
+What you can do at this point is to look at the examples, run them, and inspect the trace. The PoC comes with more than a dozen examples exercising the most important aspects of SCXML + Web Prolog. The examples can be found in [scxml-web-prolog/web-client/scxml/](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml).
 
 
 
+## Installing and running
 
-## Installation
+### Installing
+
+#### Get the latest SWI-Prolog
+
+Install the latest SWI-Prolog _development version_ [here](https://www.swi-prolog.org/download/devel). 
+
+Note that if you're running MacOSX, you may need to install [xquartz](http://xquartz.macosforge.org/) as well, in order for the trace mechanism to work as intended.
 
 
-### Get the latest SWI-Prolog
+#### Clone or download the repo
 
-Install the latest  [SWI-Prolog](http://www.swi-prolog.org) _development
-version_. 
+### Running
 
-### Clone or download the repo
-
-## Running Web Prolog
-
-From the scxml-web-prolog directory, do:
+From the `scxml-web-prolog` directory, do:
 
 ```
 $ cd web-client
 $ swipl run.pl
 ```
 
-Success!
+The debug monitor should now appear. (It may take a while the first time.)
+
+Let's run two example processes, with [scxml/pause-and-resume.scxml](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml) and [scxml/pingpong.scxml](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml). At the Prolog prompter (`?-`), do:
+
+```text
+?- run('scxml/pause-and-resume.scxml', Pid).
+Pid = '10099674'.
+
+?- $Pid ! e1.
+Pid = '10099674'.
+
+?- $Pid ! e2.
+Pid = '10099674'.
+
+?- $Pid ! e1.
+Pid = '10099674'.
+
+?- $Pid ! pause.
+Pid = '10099674'.
+
+?- $Pid ! resume.
+Pid = '10099674'.
+
+?- $Pid ! foo.
+Pid = '10099674'.
+
+?- $Pid ! terminate.
+Pid = '10099674'.
+
+?- flush.
+% Got down('10099674'@'http://localhost:3060',exit)
+true.
+
+?- run('scxml/pingpong.scxml', Pid).
+Pid = '20467645'.
+
+?- exit($Pid, stop).
+Pid = '20467645'.
+
+?- flush.
+% Got down('20467645'@'http://localhost:3060',stop)
+true.
+
+?-
+```
+
+Here's what the debug monitor should now show:
+
+![Alt text](img/debug-monitor.jpg?raw=true "The Prolog debug monitor")
+
+Success!!!
 
 

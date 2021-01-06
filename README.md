@@ -2,7 +2,7 @@
 
 This is a proof-of-concept implemention showing how Prolog (Web Prolog to be more precise) can be used as a datamodel and scripting language in State Chart XML (SCXML).
 
-Although the implemention is fairly complete, it certainly isn't ready for serious use. After all, it's just a PoC. Here is a list that things that needs to be done:
+Although the implemention is fairly complete (see [web-client/scxml.pl](https://github.com/torbjornlager/scxml-web-prolog/tree/main/web-client/scxml.pl)), it certainly isn't ready for serious use. After all, it's just a PoC. Here is a list that things that needs to be done:
 
 - In implementation is written in a very imperative, non-Prologish style. Should be rewritten to avoid as many globals as possible.
 - The predicate `remove_conflicting_transitions/2` is not yet implemented.

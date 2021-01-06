@@ -20,27 +20,32 @@
 %:- prolog_ide(thread_monitor).
 
 	
-    
-:- dynamic state/2, 
-           to_be_invoked/3,
-           parallel/2,
-           history/3,
-           final/2,
-           initial/1,
-           initial/2,
-           transition/5,
-           onexit/2,
-           onentry/2,
-           n/2,
-           running/0,
-           event/1,
-           internal_queue/1,
-           historyValue/2, 
-           configuration/1,
-           states_to_invoke/1,
-           invoked/2.
+% Model               
+:- dynamic 
+        state/2, 
+        to_be_invoked/3,
+        parallel/2,
+        history/3,
+        final/2,
+        initial/1,
+        initial/2,
+        transition/5,
+        onexit/2,
+        onentry/2,
+        n/2.
+
+% Global "variables"           
+:- dynamic 
+        running/0,
+        event/1,
+        internal_queue/1,
+        historyValue/2, 
+        configuration/1,
+        states_to_invoke/1,
+        invoked/2.
 
 
+% Debugging 
 :- debug(scxml(parse)).
 :- debug(scxml(model)).
 :- debug(scxml(event)).
@@ -53,7 +58,10 @@
 :- nodebug(http(_)).
 
 
-
+/** scxml_parse/1
+    
+Parses an SCXML file and generates a model.
+*/
 
 scxml_parse(File) :-
     load_xml_file(File, ListOfContent),
@@ -198,15 +206,6 @@ unify_bindings(Bs1, Bs2, Bs3) :-
 model_assert(Term) :-
     assert(Term).
 
-
-:- dynamic num/1.
-gennum(N) :-
-    (   retract(num(N))
-    ->  N1 is N+1,
-        assert(num(N1))
-    ;   N=0,
-        assert(num(1))
-    ).
 
     
     
@@ -441,6 +440,9 @@ exit_interpreter([State|States]) :-
     ->  true
     ;   exit_interpreter(States)
     ).
+    
+execute_content(Content) :-
+    maplist(call, Content).
 
 
 /** select_transitions/2
@@ -479,8 +481,11 @@ select_transition(Event, State, t(Ancestor, Targets, Actions)) :-
     ancestor(State, null, Ancestor),
     transition(Ancestor, Event, Condition, Targets, Actions),
     once(Condition).  
+
+trace_transition(t(State, Targets ,_)) :-
+    debug(scxml(info), '   Transition: ~p => ~p', [State, Targets]).  
     
-    
+
 /** remove_conflicting_transitions/2    
     
 NOT YET IMPLEMENTED!
@@ -531,7 +536,6 @@ only  a single  transition.  If multiple  states  are active  (i.e., we  are  in
 region), then there  may be multiple transitions,  one per active atomic  state (though some
 states  may not  select  a transition.)  In  this case,  the transitions  are  taken in  the
 document order of the atomic states that selected them.
-
 */
 
 microstep(EnabledTransitions) :-
@@ -658,8 +662,13 @@ process_states_to_enter([State|States]) :-
     ;   true
     ),
     process_states_to_enter(States).
-    
-    
+
+
+enqueue_internal_event(Event) :-
+    internal_queue(Internal),
+    thread_send_message(Internal, Event).
+
+
 /** compute_entry_set/2
 
 Compute the complete set of states that will  be entered as a result of taking 'transitions'.
@@ -800,15 +809,26 @@ is_descendant(StateID, AncestorID) :-
     proper_ancestor(StateID, null, AncestorID).   
 
 
-/* end of documented predicates! */
- 
+/** has_parent/2 
+*/
 
+has_parent(State, Parent) :- state(State, Parent).
+has_parent(State, Parent) :- parallel(State, Parent).
+has_parent(State, Parent) :- final(State, Parent).
+has_parent(State, Parent) :- history(State, Parent,_).
+
+
+/** invoke/1
+
+Invoke processes at a state.
+*/
+ 
 invoke(State) :-
     to_be_invoked(State, pengine, Options),
     pengine_spawn(Pid, Options),
     debug(scxml(invoke), '      Invoked: pengine ~p at ~p', [Pid, State]),
     assert(invoked(State, Pid)),
-    raise(spawned(Pid)),
+    enqueue_internal_event(spawned(Pid)),
     fail.
 invoke(State) :-
     to_be_invoked(State, actor, Options),
@@ -816,23 +836,17 @@ invoke(State) :-
     spawn(Goal, Pid, Options),
     debug(scxml(invoke), '      Invoked: actor ~p at ~p', [Pid, State]),
     assert(invoked(State, Pid)),
-    raise(spawned(Pid)),
+    enqueue_internal_event(spawned(Pid)),
     fail.
 invoke(_).
 
 
+/** Handling of global "variables" */
 
 update_eventdata(Event) :-
     retractall(event(_)),
     assert(event(Event)).
-
-
-       
-execute_content(Content) :-
-    maplist(call, Content).
-
-
-
+    
 configuration_add(State) :-
     configuration(Configuration),
     ord_union(Configuration, [State], NewConfiguration),
@@ -847,9 +861,7 @@ configuration_delete(State) :-
     subtract(Configuration, [State], NewConfiguration),
     retractall(configuration(_)), 
     assert(configuration(NewConfiguration)).
-
-            
-
+     
 states_to_invoke_add(State) :-
     states_to_invoke(StatesToInvoke), 
     ord_union(StatesToInvoke, [State], NewStatesToInvoke),
@@ -865,14 +877,13 @@ states_to_invoke_delete(State) :-
     retractall(states_to_invoke(_)), 
     assert(states_to_invoke(NewStatesToInvoke)).
     
-   
-   
 update_history_value(H,  SS) :-
     retractall(historyValue(H, _)), 
     assert(historyValue(H, SS)).
    
 
-
+/** Sorting orders */
+    
 entry_order(=, State, State).
 entry_order(>, State1, State2) :-
     n(N1, State1),
@@ -889,12 +900,7 @@ exit_order(<, State1, State2) :-
 exit_order(>, _State1, _State2).
 
 
-
-has_parent(State, Parent) :- state(State, Parent).
-has_parent(State, Parent) :- parallel(State, Parent).
-has_parent(State, Parent) :- final(State, Parent).
-has_parent(State, Parent) :- history(State, Parent,_).
-
+/** Unary predicates on states */
 
 is_parallel(State) :- parallel(State, _).
 
@@ -908,19 +914,8 @@ is_final(State) :- final(State, _).
 
 is_scxml_element(State) :- state(State, null).
    
-
-
-trace_transition(t(State, Targets ,_)) :-
-    debug(scxml(info), '   Transition: ~p => ~p', [State, Targets]).
-
-
-
-enqueue_internal_event(Event) :-
-    internal_queue(Internal),
-    thread_send_message(Internal, Event).
-    
-
-    
+  
+/** Built in SCXML predicates */
     
 raise(Event) :-
     enqueue_internal_event(Event).
@@ -940,6 +935,7 @@ send_after(Parent, Message, Delay) :-
            Parent ! Message
     }).       
 
+
 cancel(ID) :-
     exit(ID, cancel).
 
@@ -957,6 +953,15 @@ script(Goal) :-
 %    debug(scxml(execute), 'About to execute ~p', [Goal]),
     call(Goal),
     debug(scxml(execute), '    Execution: ~p', [Goal]).
-   
+
+
+:- dynamic num/1.
+gennum(N) :-
+    (   retract(num(N))
+    ->  N1 is N+1,
+        assert(num(N1))
+    ;   N=0,
+        assert(num(1))
+    ).
 
 

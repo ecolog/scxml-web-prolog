@@ -84,7 +84,7 @@ true.
 
 Here's what the debug monitor should now show:
 
-![Alt text](img/debug-monitor.jpg?raw=true "The Prolog debug monitor")
+![The Prolog debug monitor](img/debug-monitor.jpg?raw=true "The Prolog debug monitor")
 
 Success running the other examples!
 

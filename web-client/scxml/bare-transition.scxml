@@ -6,7 +6,9 @@
     being logged - once for each cycle of the main event loop of 
     the algorithm.
 -->
-<scxml datamodel="web-prolog" initial="s">
+<scxml version="2.0"
+       datamodel="web-prolog"
+       initial="s">
     <state id="s">
         <go>
             sleep(1), 

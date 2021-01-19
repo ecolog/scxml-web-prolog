@@ -1,7 +1,9 @@
 <!--
    A simple conversational agent written in a form-based style.
 -->
-<scxml initial="form">
+<scxml version="2.0"
+       datamodel="web-prolog"
+       initial="form">
     <state id="form" initial="selectFormItem">
         <datamodel>
             :- dynamic 

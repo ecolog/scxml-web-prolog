@@ -2,7 +2,9 @@
     Two parallel states playing pingpong.
     Pinger has the serve.
 -->
-<scxml initial="Start">
+<scxml version="2.0"
+       datamodel="web-prolog"
+       initial="Start">
     <parallel id="Start">
         <state id="Pinger">
             <onentry>

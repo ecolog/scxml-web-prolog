@@ -1,4 +1,6 @@
-<scxml initial="p">
+<scxml version="2.0"
+       datamodel="web-prolog"
+       initial="p">
     <parallel id="p">
         <state id="s1">
             <initial id="i1">

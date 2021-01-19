@@ -1,4 +1,6 @@
-<scxml datamodel="web-prolog" initial="Pingpong">
+<scxml version="2.0"
+       datamodel="web-prolog"
+       initial="Pingpong">
     <state id="Pingpong" initial="Init">
         <invoke type="actor" goal="ponger">
             ponger :-

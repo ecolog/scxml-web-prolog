@@ -2,7 +2,9 @@
     Pause and resume.
     See https://github.com/torbjornlager/scxml-web-prolog/raw/main/img/pause-and-resume.jpg
 -->
-<scxml initial="process">
+<scxml version="2.0"
+       datamodel="web-prolog"
+       initial="process">
     <state id="process">
         <initial>
             <go to="s1" />

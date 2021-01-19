@@ -1,4 +1,6 @@
-<scxml datamodel="web-prolog" initial="s">
+<scxml version="2.0"
+       datamodel="web-prolog"
+       initial="s">
     <datamodel>
 
         s(Sem) --> np(X), vp(X^Sem).

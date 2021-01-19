@@ -3,7 +3,9 @@
    Greatest Common Divisor (GCD) for a set of
    integers {25,10,15,30}.
 -->
-<scxml datamodel="web-prolog" initial="run">
+<scxml version="2.0"
+       datamodel="web-prolog"
+       initial="run">
     <datamodel>
         int(25).
         int(10).

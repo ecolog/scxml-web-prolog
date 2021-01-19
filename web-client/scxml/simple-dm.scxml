@@ -3,7 +3,9 @@
     order to parse the user's input. Also a nice example of how to make
     use of the <history> element.
 -->
-<scxml datamodel="web-prolog" initial="start">
+<scxml version="2.0"
+       datamodel="web-prolog"
+       initial="start">
     <datamodel>
         :- dynamic color/1, size/1.
         

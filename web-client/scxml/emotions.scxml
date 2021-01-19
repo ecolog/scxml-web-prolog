@@ -2,7 +2,9 @@
     An agent's controller of emotions and behavior.
     See https://github.com/torbjornlager/scxml-web-prolog/raw/main/img/emotions.jpg
 -->
-<scxml initial="agent">
+<scxml version="2.0"
+       datamodel="web-prolog"
+       initial="agent">
     <parallel id="agent">
         <parallel id="emotions">
             <state id="AF-dimension" initial="anger">

@@ -7,12 +7,12 @@
     <state id="form" initial="selectFormItem">
         <datamodel>
             :- dynamic 
-                welcome/1,
+                welcome/0,
                 color/1,
                 size/1.
         </datamodel>
         <state id="selectFormItem">
-            <go to="Welcome" if="\+ welcome(_)"/>
+            <go to="Welcome" if="\+ welcome"/>
             <go to="Color"   if="\+ color(_)"/>
             <go to="Size"    if="\+ size(_)"/>
             <go to="Respond"/>
@@ -20,7 +20,7 @@
         <state id="Welcome">
             <onentry>
                 log('Welcome to the box shop!'),
-                assert(welcome(true))
+                assert(welcome)
             </onentry>
             <go to="selectFormItem"/>
         </state>

@@ -1,10 +1,10 @@
 <!--
     Look what a transition totally without attributes can do! 
-    One clue here is that it HAS an attribute 'cond' which has a
+    One clue here is that it HAS an attribute 'if' which has a
     a default value of 'true'. So basically, this is a condition-
     action rule with a condition that will lead to the word "hello"
-    being logged - once for each cycle of the main event loop of 
-    the algorithm.
+    being logged - once for each cycle of the main loop of the 
+    algorithm.
 -->
 <scxml version="2.0"
        datamodel="web-prolog"

@@ -8,25 +8,19 @@
        initial="start">
     <datamodel>
         :- dynamic color/1, size/1.
-        
-        np(color(Color)) --> color(Color).
-        np(color(Color)) --> [a], color(Color), [box].
-        np(size(Size)) --> size(Size).
-        np(size(Size)) --> [a], size(Size), [box].
-        
-        color(red) --> [red].
-        color(blue) --> [blue].
-
-        size(small) --> [small].
-        size(big) --> [big].
+            
+        np(Attr) --> adj(Attr).
+        np(Attr) --> [a], adj(Attr), [box].
+    
+        adj(color(red)) --> [red].
+        adj(color(blue)) --> [blue].
+        adj(size(small)) --> [small].
+        adj(size(big)) --> [big].
         
     </datamodel>
     <state id="start" initial="color">
-        <onentry>
-            writeln('Welcome to the box shop!')
-        </onentry>
         <history id="h">
-            <go to="color" />
+            <go to="color"/>
         </history>
         <state id="color">
             <onentry> 
